@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.agrobox.ruralcoleta.data.export.ExcelExportService
 import br.com.agrobox.ruralcoleta.data.local.entity.ModeloColetaEntity
+import br.com.agrobox.ruralcoleta.data.repository.BenfeitoriaRepository
 import br.com.agrobox.ruralcoleta.data.repository.ColetaRepository
+import br.com.agrobox.ruralcoleta.data.repository.FotoBenfeitoriaRepository
+import br.com.agrobox.ruralcoleta.data.repository.FotoColetaRepository
 import br.com.agrobox.ruralcoleta.data.repository.ModeloColetaRepository
 import br.com.agrobox.ruralcoleta.data.repository.RespostaColetaRepository
 import br.com.agrobox.ruralcoleta.util.ShareHelper
@@ -18,7 +21,10 @@ class ExportacaoColetasViewModel(
     private val modeloId: Long,
     private val coletaRepository: ColetaRepository,
     private val modeloColetaRepository: ModeloColetaRepository,
-    private val respostaColetaRepository: RespostaColetaRepository
+    private val respostaColetaRepository: RespostaColetaRepository,
+    private val fotoColetaRepository: FotoColetaRepository,
+    private val benfeitoriaRepository: BenfeitoriaRepository,
+    private val fotoBenfeitoriaRepository: FotoBenfeitoriaRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExportacaoColetasUiState())
@@ -38,9 +44,7 @@ class ExportacaoColetasViewModel(
         }
     }
 
-    fun alternarSelecao(
-        coletaId: Long
-    ) {
+    fun alternarSelecao(coletaId: Long) {
         val selecionadas = _uiState.value.selecionadas.toMutableSet()
 
         if (selecionadas.contains(coletaId)) {
@@ -66,9 +70,7 @@ class ExportacaoColetasViewModel(
         )
     }
 
-    fun exportarExcel(
-        context: Context
-    ) {
+    fun exportarExcel(context: Context) {
         val idsSelecionados = _uiState.value.selecionadas.toList()
 
         if (idsSelecionados.isEmpty()) {
@@ -92,12 +94,38 @@ class ExportacaoColetasViewModel(
                     .first()
             }
 
+            val fotoPrincipalPorColeta = coletas.associate { coleta ->
+                val fotoPrincipal = fotoColetaRepository
+                    .listarPorColeta(coleta.id)
+                    .first()
+                    .firstOrNull()
+
+                coleta.id to fotoPrincipal?.caminhoArquivo
+            }
+
+            val fotosBenfeitoriasPorColeta = coletas.associate { coleta ->
+                val benfeitorias = benfeitoriaRepository
+                    .listarPorColeta(coleta.id)
+                    .first()
+
+                val fotos = benfeitorias.flatMap { benfeitoria ->
+                    fotoBenfeitoriaRepository
+                        .listarPorBenfeitoria(benfeitoria.id)
+                        .first()
+                        .map { foto -> foto.caminhoArquivo }
+                }
+
+                coleta.id to fotos
+            }
+
             val arquivo = ExcelExportService().exportarColetas(
                 context = context,
                 nomeModelo = modelo?.nome ?: "coletas",
                 coletas = coletas,
                 variaveis = variaveis,
-                respostasPorColeta = respostasPorColeta
+                respostasPorColeta = respostasPorColeta,
+                fotoPrincipalPorColeta = fotoPrincipalPorColeta,
+                fotosBenfeitoriasPorColeta = fotosBenfeitoriasPorColeta
             )
 
             ShareHelper.compartilharArquivo(

@@ -103,6 +103,58 @@ fun PreferenciasScreen(
                 },
                 onCheckedChange = viewModel::alterarMostrarRascunhosDashboard
             )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Período de atividades recentes",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Define o período usado no card de recentes do Dashboard.",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(7, 15, 30).forEach { dias ->
+                            FilterChip(
+                                selected = uiState.periodoAtividadesRecentes == dias,
+                                onClick = {
+                                    viewModel.alterarPeriodoAtividadesRecentes(dias)
+                                },
+                                label = {
+                                    Text(
+                                        text = "$dias dias",
+                                        color = if (uiState.periodoAtividadesRecentes == dias) {
+                                            Color.White
+                                        } else {
+                                            Color.Black
+                                        }
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Color(0xFF00823B),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White,
+                                    labelColor = Color.Black
+                                )
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

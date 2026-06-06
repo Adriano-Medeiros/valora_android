@@ -44,10 +44,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.util.LocationHelper
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 @Composable
 fun EditarDadosGeraisColetaScreen(
     viewModel: EditarDadosGeraisColetaViewModel,
+    capturarGpsAutomaticamente: Boolean,
     onBackClick: () -> Unit,
     onSaveSuccess: (Long) -> Unit
 ) {
@@ -113,7 +117,25 @@ fun EditarDadosGeraisColetaScreen(
             )
         }
     }
+    val gpsAutomaticoExecutado = remember {
+        mutableStateOf(false)
+    }
 
+    LaunchedEffect(
+        capturarGpsAutomaticamente,
+        uiState.coletaOriginal
+    ) {
+        if (
+            capturarGpsAutomaticamente &&
+            !gpsAutomaticoExecutado.value &&
+            uiState.coletaOriginal != null &&
+            uiState.latitude.isBlank() &&
+            uiState.longitude.isBlank()
+        ) {
+            gpsAutomaticoExecutado.value = true
+            capturarCoordenadas()
+        }
+    }
     val verdeEscuro = Color(0xFF003B24)
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
@@ -185,7 +207,7 @@ fun EditarDadosGeraisColetaScreen(
             OutlinedTextField(
                 value = uiState.municipio,
                 onValueChange = viewModel::alterarMunicipio,
-                label = { Text("Município *") },
+                label = { Text("Município") },
                 isError = uiState.erroMunicipio,
                 supportingText = {
                     if (uiState.erroMunicipio) {
@@ -199,7 +221,7 @@ fun EditarDadosGeraisColetaScreen(
             OutlinedTextField(
                 value = uiState.uf,
                 onValueChange = viewModel::alterarUf,
-                label = { Text("UF *") },
+                label = { Text("UF") },
                 isError = uiState.erroUf,
                 supportingText = {
                     if (uiState.erroUf) {
@@ -213,7 +235,7 @@ fun EditarDadosGeraisColetaScreen(
             OutlinedTextField(
                 value = uiState.informante,
                 onValueChange = viewModel::alterarInformante,
-                label = { Text("Informante *") },
+                label = { Text("Informante") },
                 isError = uiState.erroInformante,
                 supportingText = {
                     if (uiState.erroInformante) {
@@ -227,7 +249,7 @@ fun EditarDadosGeraisColetaScreen(
             OutlinedTextField(
                 value = uiState.contatoInformante,
                 onValueChange = viewModel::alterarContatoInformante,
-                label = { Text("Contato do informante *") },
+                label = { Text("Contato do informante") },
                 isError = uiState.erroContatoInformante,
                 supportingText = {
                     if (uiState.erroContatoInformante) {

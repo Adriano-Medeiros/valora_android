@@ -79,4 +79,5 @@ sealed class Screen(
 
     data object SobreApp : Screen("sobre_app")
 
+    data object Mapa : Screen("mapa")
 }

@@ -4,10 +4,15 @@ import android.content.Context
 import br.com.agrobox.ruralcoleta.data.local.entity.ColetaEntity
 import br.com.agrobox.ruralcoleta.data.local.entity.RespostaColetaEntity
 import br.com.agrobox.ruralcoleta.data.local.entity.VariavelEntity
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.ClientAnchor
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileOutputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 class ExcelExportService {
 
@@ -16,7 +21,9 @@ class ExcelExportService {
         nomeModelo: String,
         coletas: List<ColetaEntity>,
         variaveis: List<VariavelEntity>,
-        respostasPorColeta: Map<Long, List<RespostaColetaEntity>>
+        respostasPorColeta: Map<Long, List<RespostaColetaEntity>>,
+        fotoPrincipalPorColeta: Map<Long, String?>,
+        fotosBenfeitoriasPorColeta: Map<Long, List<String>>
     ): File {
         val pasta = File(context.filesDir, "exportacoes")
 
@@ -29,31 +36,66 @@ class ExcelExportService {
             "exportacao_${normalizarNomeArquivo(nomeModelo)}_${System.currentTimeMillis()}.xlsx"
         )
 
-        ZipOutputStream(FileOutputStream(arquivo)).use { zip ->
-            adicionarArquivo(zip, "[Content_Types].xml", contentTypes())
-            adicionarArquivo(zip, "_rels/.rels", rels())
-            adicionarArquivo(zip, "xl/workbook.xml", workbook())
-            adicionarArquivo(zip, "xl/_rels/workbook.xml.rels", workbookRels())
-            adicionarArquivo(zip, "xl/styles.xml", styles())
-            adicionarArquivo(
-                zip,
-                "xl/worksheets/sheet1.xml",
-                sheetXml(
-                    coletas = coletas,
-                    variaveis = variaveis,
-                    respostasPorColeta = respostasPorColeta
-                )
-            )
+        val workbook = XSSFWorkbook()
+
+        criarPlanilha(
+            workbook = workbook,
+            coletas = coletas,
+            variaveis = variaveis,
+            respostasPorColeta = respostasPorColeta,
+            fotoPrincipalPorColeta = fotoPrincipalPorColeta,
+            fotosBenfeitoriasPorColeta = fotosBenfeitoriasPorColeta
+        )
+
+        FileOutputStream(arquivo).use { output ->
+            workbook.write(output)
         }
+
+        workbook.close()
 
         return arquivo
     }
 
-    private fun sheetXml(
+    private fun criarPlanilha(
+        workbook: Workbook,
         coletas: List<ColetaEntity>,
         variaveis: List<VariavelEntity>,
-        respostasPorColeta: Map<Long, List<RespostaColetaEntity>>
-    ): String {
+        respostasPorColeta: Map<Long, List<RespostaColetaEntity>>,
+        fotoPrincipalPorColeta: Map<Long, String?>,
+        fotosBenfeitoriasPorColeta: Map<Long, List<String>>
+    ) {
+        val sheet = workbook.createSheet("Coletas")
+        val drawing = sheet.createDrawingPatriarch()
+        val helper = workbook.creationHelper
+
+        val headerStyle = workbook.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            alignment = HorizontalAlignment.CENTER
+            borderBottom = BorderStyle.THIN
+            borderTop = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+
+        val headerFont = workbook.createFont().apply {
+            bold = true
+            color = IndexedColors.BLACK.index
+        }
+
+        headerStyle.setFont(headerFont)
+
+        val textStyle = workbook.createCellStyle().apply {
+            borderBottom = BorderStyle.THIN
+            borderTop = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+
+        val maxFotosBenfeitorias = fotosBenfeitoriasPorColeta.values
+            .maxOfOrNull { it.size }
+            ?: 0
+
         val colunasFixas = listOf(
             "Ordem",
             "Nome do imóvel",
@@ -66,31 +108,37 @@ class ExcelExportService {
             "Status"
         )
 
-        val cabecalhos = colunasFixas + variaveis.map { it.nome }
-
-        val linhas = StringBuilder()
-
-        linhas.append("<row r=\"1\">")
-
-        cabecalhos.forEachIndexed { index, titulo ->
-            linhas.append(
-                cell(
-                    col = index + 1,
-                    row = 1,
-                    value = titulo,
-                    style = 1
-                )
-            )
+        val colunasVariaveis = variaveis.map { variavel ->
+            if (variavel.unidade.isNullOrBlank()) {
+                variavel.nome
+            } else {
+                "${variavel.nome} (${variavel.unidade})"
+            }
         }
 
-        linhas.append("</row>")
+        val colunasFotos = listOf("Foto principal") +
+                (1..maxFotosBenfeitorias).map { "Foto benfeitoria $it" }
 
-        coletas.forEachIndexed { rowIndex, coleta ->
-            val rowNumber = rowIndex + 2
+        val cabecalhos = colunasFixas + colunasVariaveis + colunasFotos
+
+        val headerRow = sheet.createRow(0)
+
+        cabecalhos.forEachIndexed { index, titulo ->
+            val cell = headerRow.createCell(index)
+            cell.setCellValue(titulo)
+            cell.cellStyle = headerStyle
+        }
+
+        coletas.forEachIndexed { index, coleta ->
+            val rowIndex = index + 1
+            val row = sheet.createRow(rowIndex)
+
+            row.heightInPoints = 95f
+
             val respostas = respostasPorColeta[coleta.id].orEmpty()
 
             val valoresFixos = listOf(
-                (rowIndex + 1).toString(),
+                (index + 1).toString(),
                 coleta.nomeReferencia,
                 coleta.municipio,
                 coleta.uf,
@@ -111,35 +159,128 @@ class ExcelExportService {
 
             val valores = valoresFixos + valoresVariaveis
 
-            linhas.append("<row r=\"$rowNumber\">")
-
             valores.forEachIndexed { colIndex, valor ->
-                linhas.append(
-                    cell(
-                        col = colIndex + 1,
-                        row = rowNumber,
-                        value = valor
-                    )
-                )
+                val cell = row.createCell(colIndex)
+                cell.setCellValue(valor)
+                cell.cellStyle = textStyle
             }
 
-            linhas.append("</row>")
+            val colunaFotoPrincipal = valores.size
+
+            criarCelulaVaziaComBorda(
+                row = row,
+                colIndex = colunaFotoPrincipal,
+                style = textStyle
+            )
+
+            inserirImagemNaCelula(
+                workbook = workbook,
+                drawing = drawing,
+                helper = helper,
+                caminhoImagem = fotoPrincipalPorColeta[coleta.id],
+                rowIndex = rowIndex,
+                colIndex = colunaFotoPrincipal
+            )
+
+            val fotosBenfeitorias = fotosBenfeitoriasPorColeta[coleta.id].orEmpty()
+
+            (0 until maxFotosBenfeitorias).forEach { fotoIndex ->
+                val colIndex = colunaFotoPrincipal + 1 + fotoIndex
+
+                criarCelulaVaziaComBorda(
+                    row = row,
+                    colIndex = colIndex,
+                    style = textStyle
+                )
+
+                inserirImagemNaCelula(
+                    workbook = workbook,
+                    drawing = drawing,
+                    helper = helper,
+                    caminhoImagem = fotosBenfeitorias.getOrNull(fotoIndex),
+                    rowIndex = rowIndex,
+                    colIndex = colIndex
+                )
+            }
         }
 
-        return """
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-    <sheetData>
-        $linhas
-    </sheetData>
-</worksheet>
-        """.trim()
+        sheet.createFreezePane(0, 1)
+
+        cabecalhos.forEachIndexed { index, _ ->
+            sheet.setColumnWidth(index, 22 * 256)
+        }
+
+        sheet.setColumnWidth(0, 10 * 256)
+        sheet.setColumnWidth(1, 30 * 256)
+        sheet.setColumnWidth(4, 26 * 256)
+        sheet.setColumnWidth(5, 24 * 256)
+
+        val primeiraColunaFoto = colunasFixas.size + colunasVariaveis.size
+
+        (primeiraColunaFoto until cabecalhos.size).forEach { col ->
+            sheet.setColumnWidth(col, 18 * 256)
+        }
+    }
+
+    private fun criarCelulaVaziaComBorda(
+        row: org.apache.poi.ss.usermodel.Row,
+        colIndex: Int,
+        style: org.apache.poi.ss.usermodel.CellStyle
+    ) {
+        val cell = row.createCell(colIndex)
+        cell.setCellValue("")
+        cell.cellStyle = style
+    }
+
+    private fun inserirImagemNaCelula(
+        workbook: Workbook,
+        drawing: org.apache.poi.ss.usermodel.Drawing<*>,
+        helper: org.apache.poi.ss.usermodel.CreationHelper,
+        caminhoImagem: String?,
+        rowIndex: Int,
+        colIndex: Int
+    ) {
+        if (caminhoImagem.isNullOrBlank()) {
+            return
+        }
+
+        val arquivo = File(caminhoImagem)
+
+        if (!arquivo.exists()) {
+            return
+        }
+
+        val bytes = arquivo.readBytes()
+
+        val tipoImagem = when (arquivo.extension.lowercase()) {
+            "png" -> Workbook.PICTURE_TYPE_PNG
+            else -> Workbook.PICTURE_TYPE_JPEG
+        }
+
+        val pictureIndex = workbook.addPicture(
+            bytes,
+            tipoImagem
+        )
+
+        val anchor = helper.createClientAnchor()
+
+        anchor.setCol1(colIndex)
+        anchor.setRow1(rowIndex)
+        anchor.setCol2(colIndex + 1)
+        anchor.setRow2(rowIndex + 1)
+
+        drawing.createPicture(
+            anchor,
+            pictureIndex
+        )
     }
 
     private fun formatarResposta(
         resposta: RespostaColetaEntity?
     ): String {
-        if (resposta == null) return ""
+        if (resposta == null) {
+            return ""
+        }
 
         return when {
             !resposta.valorTexto.isNullOrBlank() -> resposta.valorTexto
@@ -151,63 +292,6 @@ class ExcelExportService {
         }
     }
 
-    private fun cell(
-        col: Int,
-        row: Int,
-        value: String,
-        style: Int = 0
-    ): String {
-        val ref = colunaExcel(col) + row
-
-        return """
-<c r="$ref" t="inlineStr" s="$style">
-    <is>
-        <t>${escapeXml(value)}</t>
-    </is>
-</c>
-        """.trim()
-    }
-
-    private fun colunaExcel(
-        index: Int
-    ): String {
-        var num = index
-        var col = ""
-
-        while (num > 0) {
-            val rem = (num - 1) % 26
-            col = ('A' + rem) + col
-            num = (num - 1) / 26
-        }
-
-        return col
-    }
-
-    private fun escapeXml(
-        text: String
-    ): String {
-        return text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
-            .replace("'", "&apos;")
-    }
-
-    private fun adicionarArquivo(
-        zip: ZipOutputStream,
-        path: String,
-        content: String
-    ) {
-        zip.putNextEntry(ZipEntry(path))
-
-        zip.write(
-            content.trim().toByteArray(Charsets.UTF_8)
-        )
-
-        zip.closeEntry()
-    }
-
     private fun normalizarNomeArquivo(
         texto: String
     ): String {
@@ -215,81 +299,5 @@ class ExcelExportService {
             .lowercase()
             .replace(" ", "_")
             .replace(Regex("[^a-z0-9_]"), "")
-    }
-
-    private fun contentTypes(): String {
-        return """
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-    <Default Extension="xml" ContentType="application/xml"/>
-    <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-    <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-    <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-</Types>
-        """.trim()
-    }
-
-    private fun rels(): String {
-        return """
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
-</Relationships>
-        """.trim()
-    }
-
-    private fun workbook(): String {
-        return """
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-    <sheets>
-        <sheet name="Coletas" sheetId="1" r:id="rId1"/>
-    </sheets>
-</workbook>
-        """.trim()
-    }
-
-    private fun workbookRels(): String {
-        return """
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-    <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>
-        """.trim()
-    }
-
-    private fun styles(): String {
-        return """
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-    <fonts count="2">
-        <font>
-            <sz val="11"/>
-            <name val="Calibri"/>
-        </font>
-        <font>
-            <b/>
-            <sz val="11"/>
-            <name val="Calibri"/>
-        </font>
-    </fonts>
-    <fills count="2">
-        <fill>
-            <patternFill patternType="none"/>
-        </fill>
-        <fill>
-            <patternFill patternType="gray125"/>
-        </fill>
-    </fills>
-    <borders count="1">
-        <border/>
-    </borders>
-    <cellStyleXfs count="1">
-        <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
-    </cellStyleXfs>
-    <cellXfs count="2">
-        <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-        <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"/>
-    </cellXfs>
-</styleSheet>
-        """.trim()
     }
 }

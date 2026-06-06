@@ -77,28 +77,11 @@ class NovaColetaViewModel(
 
         val erroNome = state.nomeReferencia.isBlank()
 
-        val erroMunicipio = state.municipio.isBlank()
 
-        val erroUf = state.uf.isBlank()
-
-        val erroInformante = state.informante.isBlank()
-
-        val erroContato = state.contatoInformante.isBlank()
-
-        if (
-            erroNome ||
-            erroMunicipio ||
-            erroUf ||
-            erroInformante ||
-            erroContato
-        ) {
-
+        if (erroNome)
+        {
             _uiState.value = state.copy(
                 erroNomeReferencia = erroNome,
-                erroMunicipio = erroMunicipio,
-                erroUf = erroUf,
-                erroInformante = erroInformante,
-                erroContatoInformante = erroContato,
                 mensagemErro = "Preencha todos os campos obrigatórios."
             )
 

@@ -23,10 +23,14 @@ import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.ui.components.ColetaTopBar
 import br.com.agrobox.ruralcoleta.util.LocationHelper
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 @Composable
 fun DadosGeraisColetaScreen(
     viewModel: NovaColetaViewModel,
+    capturarGpsAutomaticamente: Boolean,
     onBackClick: () -> Unit,
     onNextClick: () -> Unit
 ) {
@@ -121,7 +125,21 @@ fun DadosGeraisColetaScreen(
             )
         }
     }
+    val gpsAutomaticoExecutado = remember {
+        mutableStateOf(false)
+    }
 
+    LaunchedEffect(capturarGpsAutomaticamente) {
+        if (
+            capturarGpsAutomaticamente &&
+            !gpsAutomaticoExecutado.value &&
+            uiState.latitude.isBlank() &&
+            uiState.longitude.isBlank()
+        ) {
+            gpsAutomaticoExecutado.value = true
+            capturarCoordenadas()
+        }
+    }
     val verde = Color(0xFF00823B)
 
     val fundo = Color(0xFFF7F8F7)
@@ -192,7 +210,7 @@ fun DadosGeraisColetaScreen(
                 onValueChange = viewModel::alterarMunicipio,
 
                 label = {
-                    Text("Município *")
+                    Text("Município ")
                 },
 
                 isError = uiState.erroMunicipio,
@@ -216,7 +234,7 @@ fun DadosGeraisColetaScreen(
                 onValueChange = viewModel::alterarUf,
 
                 label = {
-                    Text("UF *")
+                    Text("UF ")
                 },
 
                 isError = uiState.erroUf,
@@ -239,7 +257,7 @@ fun DadosGeraisColetaScreen(
                 onValueChange = viewModel::alterarInformante,
 
                 label = {
-                    Text("Informante *")
+                    Text("Informante ")
                 },
 
                 isError = uiState.erroInformante,
@@ -263,7 +281,7 @@ fun DadosGeraisColetaScreen(
                 onValueChange = viewModel::alterarContatoInformante,
 
                 label = {
-                    Text("Contato do informante *")
+                    Text("Contato do informante ")
                 },
 
                 isError = uiState.erroContatoInformante,

@@ -15,14 +15,17 @@ class PreferenciasRepository(
     private val _capturarGpsAutomaticamente = MutableStateFlow(
         prefs.getBoolean(CHAVE_GPS_AUTOMATICO, false)
     )
-
     val capturarGpsAutomaticamente = _capturarGpsAutomaticamente.asStateFlow()
 
     private val _mostrarRascunhosDashboard = MutableStateFlow(
         prefs.getBoolean(CHAVE_MOSTRAR_RASCUNHOS, true)
     )
-
     val mostrarRascunhosDashboard = _mostrarRascunhosDashboard.asStateFlow()
+
+    private val _periodoAtividadesRecentes = MutableStateFlow(
+        prefs.getInt(CHAVE_PERIODO_RECENTES, 7)
+    )
+    val periodoAtividadesRecentes = _periodoAtividadesRecentes.asStateFlow()
 
     fun alterarCapturarGpsAutomaticamente(
         ativo: Boolean
@@ -44,8 +47,24 @@ class PreferenciasRepository(
         _mostrarRascunhosDashboard.value = ativo
     }
 
+    fun alterarPeriodoAtividadesRecentes(
+        dias: Int
+    ) {
+        val valor = when (dias) {
+            7, 15, 30 -> dias
+            else -> 7
+        }
+
+        prefs.edit()
+            .putInt(CHAVE_PERIODO_RECENTES, valor)
+            .apply()
+
+        _periodoAtividadesRecentes.value = valor
+    }
+
     companion object {
         private const val CHAVE_GPS_AUTOMATICO = "capturar_gps_automaticamente"
         private const val CHAVE_MOSTRAR_RASCUNHOS = "mostrar_rascunhos_dashboard"
+        private const val CHAVE_PERIODO_RECENTES = "periodo_atividades_recentes"
     }
 }

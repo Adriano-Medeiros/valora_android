@@ -101,8 +101,8 @@ fun DashboardScreen(
                     )
 
                     ResumoCard(
-                        valor = uiState.coletas.take(5).size.toString(),
-                        titulo = "Recentes",
+                        valor = uiState.totalRecentes.toString(),
+                        titulo = "Últimos ${uiState.periodoRecentesDias} dias",
                         icone = "🕘",
                         modifier = Modifier.weight(1f)
                     )

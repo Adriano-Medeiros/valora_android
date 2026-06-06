@@ -34,6 +34,14 @@ class PreferenciasViewModel(
                 )
             }
         }
+
+        viewModelScope.launch {
+            repository.periodoAtividadesRecentes.collect { valor ->
+                _uiState.value = _uiState.value.copy(
+                    periodoAtividadesRecentes = valor
+                )
+            }
+        }
     }
 
     fun alterarCapturarGpsAutomaticamente(
@@ -46,5 +54,11 @@ class PreferenciasViewModel(
         ativo: Boolean
     ) {
         repository.alterarMostrarRascunhosDashboard(ativo)
+    }
+
+    fun alterarPeriodoAtividadesRecentes(
+        dias: Int
+    ) {
+        repository.alterarPeriodoAtividadesRecentes(dias)
     }
 }

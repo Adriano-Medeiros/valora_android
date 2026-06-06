@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,6 +22,7 @@ import br.com.agrobox.ruralcoleta.data.repository.FotoColetaRepository
 import br.com.agrobox.ruralcoleta.data.repository.GrupoVariavelRepository
 import br.com.agrobox.ruralcoleta.data.repository.ModeloColetaRepository
 import br.com.agrobox.ruralcoleta.data.repository.OpcaoVariavelRepository
+import br.com.agrobox.ruralcoleta.data.repository.PreferenciasRepository
 import br.com.agrobox.ruralcoleta.data.repository.RespostaColetaRepository
 import br.com.agrobox.ruralcoleta.data.repository.VariavelRepository
 import br.com.agrobox.ruralcoleta.ui.coleta.DadosGeraisColetaScreen
@@ -57,6 +59,10 @@ import br.com.agrobox.ruralcoleta.ui.coleta.resumo.ResumoColetaViewModelFactory
 import br.com.agrobox.ruralcoleta.ui.components.EmBreveScreen
 import br.com.agrobox.ruralcoleta.ui.components.RuralBottomBar
 import br.com.agrobox.ruralcoleta.ui.configuracoes.ConfiguracoesScreen
+import br.com.agrobox.ruralcoleta.ui.configuracoes.PreferenciasScreen
+import br.com.agrobox.ruralcoleta.ui.configuracoes.PreferenciasViewModel
+import br.com.agrobox.ruralcoleta.ui.configuracoes.PreferenciasViewModelFactory
+import br.com.agrobox.ruralcoleta.ui.configuracoes.SobreAppScreen
 import br.com.agrobox.ruralcoleta.ui.dashboard.DashboardScreen
 import br.com.agrobox.ruralcoleta.ui.dashboard.DashboardViewModel
 import br.com.agrobox.ruralcoleta.ui.dashboard.DashboardViewModelFactory
@@ -83,11 +89,10 @@ import br.com.agrobox.ruralcoleta.ui.variavel.VariavelViewModelFactory
 import br.com.agrobox.ruralcoleta.ui.variavel.opcoes.OpcoesVariavelScreen
 import br.com.agrobox.ruralcoleta.ui.variavel.opcoes.OpcoesVariavelViewModel
 import br.com.agrobox.ruralcoleta.ui.variavel.opcoes.OpcoesVariavelViewModelFactory
-import br.com.agrobox.ruralcoleta.ui.configuracoes.PreferenciasScreen
-import br.com.agrobox.ruralcoleta.ui.configuracoes.SobreAppScreen
-import br.com.agrobox.ruralcoleta.data.repository.PreferenciasRepository
-import br.com.agrobox.ruralcoleta.ui.configuracoes.PreferenciasViewModel
-import br.com.agrobox.ruralcoleta.ui.configuracoes.PreferenciasViewModelFactory
+import br.com.agrobox.ruralcoleta.ui.mapa.MapaColetasScreen
+import br.com.agrobox.ruralcoleta.ui.mapa.MapaColetasViewModel
+import br.com.agrobox.ruralcoleta.ui.mapa.MapaColetasViewModelFactory
+
 @SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun AppNavigation(
@@ -213,19 +218,22 @@ fun AppNavigation(
                     factory = NovaColetaViewModelFactory(coletaRepository)
                 )
 
+                val capturarGpsAutomaticamente by preferenciasRepository
+                    .capturarGpsAutomaticamente
+                    .collectAsState()
+
                 DadosGeraisColetaScreen(
                     viewModel = novaColetaViewModel,
+                    capturarGpsAutomaticamente = capturarGpsAutomaticamente,
                     onBackClick = {
                         navController.popBackStack()
                     },
                     onNextClick = {
-                        novaColetaViewModel.salvar(
-                            onSuccess = { coletaId ->
-                                navController.navigate(
-                                    Screen.FormularioDinamicoColeta.createRoute(coletaId)
-                                )
-                            }
-                        )
+                        novaColetaViewModel.salvar { coletaId ->
+                            navController.navigate(
+                                Screen.FormularioDinamicoColeta.createRoute(coletaId)
+                            )
+                        }
                     }
                 )
             }
@@ -694,7 +702,10 @@ fun AppNavigation(
                         modeloId = modeloId,
                         coletaRepository = coletaRepository,
                         modeloColetaRepository = modeloColetaRepository,
-                        respostaColetaRepository = respostaColetaRepository
+                        respostaColetaRepository = respostaColetaRepository,
+                        fotoColetaRepository = fotoColetaRepository,
+                        benfeitoriaRepository = benfeitoriaRepository,
+                        fotoBenfeitoriaRepository = fotoBenfeitoriaRepository
                     )
                 )
 
@@ -767,8 +778,13 @@ fun AppNavigation(
                     )
                 )
 
+                val capturarGpsAutomaticamente by preferenciasRepository
+                    .capturarGpsAutomaticamente
+                    .collectAsState()
+
                 EditarDadosGeraisColetaScreen(
                     viewModel = editarDadosViewModel,
+                    capturarGpsAutomaticamente = capturarGpsAutomaticamente,
                     onBackClick = {
                         navController.popBackStack()
                     },
@@ -779,9 +795,20 @@ fun AppNavigation(
                     }
                 )
             }
-            composable("mapa") {
-                EmBreveScreen(
-                    titulo = "Mapa"
+            composable(Screen.Mapa.route) {
+                val mapaColetasViewModel: MapaColetasViewModel = viewModel(
+                    factory = MapaColetasViewModelFactory(
+                        coletaRepository = coletaRepository
+                    )
+                )
+
+                MapaColetasScreen(
+                    viewModel = mapaColetasViewModel,
+                    onAbrirColetaClick = { coletaId ->
+                        navController.navigate(
+                            Screen.DetalheColeta.createRoute(coletaId)
+                        )
+                    }
                 )
             }
         }

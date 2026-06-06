@@ -111,20 +111,7 @@ class ResumoColetaViewModel(
             pendencias.add("Nome / referência não informado.")
         }
 
-        if (coleta.municipio.isBlank()) {
-            pendencias.add("Município não informado.")
-        }
 
-        if (coleta.uf.isBlank()) {
-            pendencias.add("UF não informada.")
-        }
-        if (coleta.informante.isBlank()) {
-            pendencias.add("Informante não informado.")
-        }
-
-        if (coleta.contatoInformante.isBlank()) {
-            pendencias.add("Contato do informante não informado.")
-        }
         val modeloId = coleta.modeloColetaId
 
         if (modeloId == null) {

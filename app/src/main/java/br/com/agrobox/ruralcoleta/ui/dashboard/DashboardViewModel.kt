@@ -15,10 +15,7 @@ class DashboardViewModel(
     private val preferenciasRepository: PreferenciasRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        DashboardUiState()
-    )
-
+    private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -26,13 +23,12 @@ class DashboardViewModel(
     }
 
     private fun observarDashboard() {
-
         viewModelScope.launch {
-
             combine(
                 coletaRepository.listarTodas(),
-                preferenciasRepository.mostrarRascunhosDashboard
-            ) { coletas, mostrarRascunhos ->
+                preferenciasRepository.mostrarRascunhosDashboard,
+                preferenciasRepository.periodoAtividadesRecentes
+            ) { coletas, mostrarRascunhos, periodoDias ->
 
                 val coletasDashboard = if (mostrarRascunhos) {
                     coletas
@@ -41,6 +37,9 @@ class DashboardViewModel(
                         it.status != StatusColeta.RASCUNHO.name
                     }
                 }
+
+                val limiteRecentes = System.currentTimeMillis() -
+                        (periodoDias.toLong() * 24L * 60L * 60L * 1000L)
 
                 DashboardUiState(
                     coletas = coletasDashboard,
@@ -61,10 +60,15 @@ class DashboardViewModel(
 
                     totalAmostral = coletas.count {
                         it.tipoColeta == "AMOSTRAL"
-                    }
+                    },
+
+                    totalRecentes = coletas.count {
+                        it.dataColeta >= limiteRecentes
+                    },
+
+                    periodoRecentesDias = periodoDias
                 )
             }.collect { state ->
-
                 _uiState.value = state
             }
         }

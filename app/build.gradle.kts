@@ -40,6 +40,16 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+        }
+    }
 }
 
 kotlin {
@@ -57,6 +67,7 @@ dependencies {
 
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.9.6")
+
     // Ícones Material
     implementation("androidx.compose.material:material-icons-extended")
 
@@ -65,6 +76,11 @@ dependencies {
 
     // Camera / imagem
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Apache POI para excel
+    implementation("org.apache.poi:poi-ooxml:5.5.1")
+    //openstreetmap
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
