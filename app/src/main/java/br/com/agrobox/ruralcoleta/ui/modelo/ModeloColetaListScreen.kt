@@ -20,18 +20,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.data.local.entity.ModeloColetaEntity
-
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import br.com.agrobox.ruralcoleta.ui.components.CoachMarkOverlay
 @Composable
 fun ModeloColetaListScreen(
     viewModel: ModeloColetaViewModel,
     onBackClick: () -> Unit,
-    onNovoModeloClick: () -> Unit
+    onNovoModeloClick: () -> Unit,
+    mostrarTutorialPrimeiroAcesso: Boolean = false,
+    onTutorialFinalizarClick: () -> Unit = {},
+    onTutorialPularClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
-
+    val novoFormularioBounds = remember {
+        mutableStateOf<Rect?>(null)
+    }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    )
     Scaffold(
         containerColor = fundo,
         topBar = {
@@ -64,7 +77,10 @@ fun ModeloColetaListScreen(
                 onClick = onNovoModeloClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(48.dp)
+                    .onGloballyPositioned {
+                        novoFormularioBounds.value = it.boundsInRoot()
+                    },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = verde
@@ -92,6 +108,19 @@ fun ModeloColetaListScreen(
                 }
             }
         }
+    }
+    if (mostrarTutorialPrimeiroAcesso) {
+        CoachMarkOverlay(
+            targetBounds = novoFormularioBounds.value,
+            passoTexto = "Passo 3 de 3",
+            titulo = "Toque em Novo formulário",
+            descricao = "Agora você monta o formulário de pesquisa escolhendo quais variáveis serão usadas durante a coleta.",
+            textoBotaoPrimario = "Criar formulário",
+            onBotaoPrimarioClick = onNovoModeloClick,
+            textoBotaoSecundario = "Finalizar",
+            onBotaoSecundarioClick = onTutorialFinalizarClick,
+            onPularClick = onTutorialPularClick
+        )
     }
 }
 

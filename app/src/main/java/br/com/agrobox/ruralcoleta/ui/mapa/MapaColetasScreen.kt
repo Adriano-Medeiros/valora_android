@@ -1,8 +1,6 @@
 package br.com.agrobox.ruralcoleta.ui.mapa
 
 import android.content.Context
-import android.graphics.Color as AndroidColor
-import android.graphics.drawable.ColorDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,9 +56,11 @@ import br.com.agrobox.ruralcoleta.data.local.entity.StatusColeta
 import br.com.agrobox.ruralcoleta.data.local.entity.TipoColeta
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapaColetasScreen(
@@ -74,23 +74,51 @@ fun MapaColetasScreen(
         mutableStateOf<ColetaEntity?>(null)
     }
 
-    val verdeEscuro = Color(0xFF003B24)
-    val fundo = Color(0xFFF7F8F7)
-
     val mapViewState = remember {
         mutableStateOf<MapView?>(null)
     }
 
-    val coletasFiltradas = uiState.coletasFiltradas
+    val verdeEscuro = Color(0xFF003B24)
+    val fundo = Color(0xFFF7F8F7)
 
-    LaunchedEffect(Unit) {
-        Configuration.getInstance().userAgentValue =
-            context.packageName
+    val coletasFiltradas = uiState.coletasFiltradas
+    val mapaJaCentralizado = remember {
+        mutableStateOf(false)
     }
 
-    DisposableEffect(Unit) {
+    LaunchedEffect(coletasFiltradas.size) {
+        mapaJaCentralizado.value = false
+    }
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().userAgentValue = context.packageName
+    }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> {
+                    mapViewState.value?.onResume()
+                }
+
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> {
+                    mapViewState.value?.onPause()
+                }
+
+                androidx.lifecycle.Lifecycle.Event.ON_DESTROY -> {
+                    mapViewState.value?.onDetach()
+                    mapViewState.value = null
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
         onDispose {
-            mapViewState.value?.onDetach()
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -105,6 +133,7 @@ fun MapaColetasScreen(
                 coleta = coleta,
                 onAbrirClick = {
                     coletaSelecionada.value = null
+
                     onAbrirColetaClick(coleta.id)
                 }
             )
@@ -143,10 +172,12 @@ fun MapaColetasScreen(
 
                     IconButton(
                         onClick = {
-                            centralizarMapa(
-                                mapView = mapViewState.value,
-                                coletas = coletasFiltradas
-                            )
+                            mapViewState.value?.post {
+                                centralizarMapa(
+                                    mapView = mapViewState.value,
+                                    coletas = coletasFiltradas
+                                )
+                            }
                         }
                     ) {
                         Icon(
@@ -172,10 +203,12 @@ fun MapaColetasScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    centralizarMapa(
-                        mapView = mapViewState.value,
-                        coletas = coletasFiltradas
-                    )
+                    mapViewState.value?.post {
+                        centralizarMapa(
+                            mapView = mapViewState.value,
+                            coletas = coletasFiltradas
+                        )
+                    }
                 },
                 containerColor = Color(0xFF00823B)
             ) {
@@ -215,6 +248,17 @@ fun MapaColetasScreen(
                             coletaSelecionada.value = coleta
                         }
                     )
+
+                    if (!mapaJaCentralizado.value && coletasFiltradas.isNotEmpty()) {
+                        mapaJaCentralizado.value = true
+
+                        mapView.post {
+                            centralizarMapa(
+                                mapView = mapView,
+                                coletas = coletasFiltradas
+                            )
+                        }
+                    }
                 }
             )
 
@@ -328,10 +372,21 @@ private fun ColetaMapaBottomSheet(
     coleta: ColetaEntity,
     onAbrirClick: () -> Unit
 ) {
+    val verde = Color(0xFF087B35)
+    val laranja = Color(0xFFD65F00)
+    val azul = Color(0xFF1976D2)
+    val textoCinza = Color(0xFF666666)
+
     val tipoTexto = when (coleta.tipoColeta) {
         TipoColeta.AVALIANDO.name -> "Imóvel avaliando"
         TipoColeta.AMOSTRAL.name -> "Dado amostral"
         else -> coleta.tipoColeta
+    }
+
+    val tipoCor = when (coleta.tipoColeta) {
+        TipoColeta.AVALIANDO.name -> verde
+        TipoColeta.AMOSTRAL.name -> azul
+        else -> Color.DarkGray
     }
 
     val statusTexto = if (coleta.status == StatusColeta.RASCUNHO.name) {
@@ -340,21 +395,25 @@ private fun ColetaMapaBottomSheet(
         "Concluída"
     }
 
+    val statusCor = if (coleta.status == StatusColeta.RASCUNHO.name) {
+        laranja
+    } else {
+        verde
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(22.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 22.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
+
         Text(
             text = coleta.nomeReferencia,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "${coleta.municipio}/${coleta.uf}",
-            color = Color.Gray
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF003B24)
         )
 
         Row(
@@ -363,43 +422,130 @@ private fun ColetaMapaBottomSheet(
             AssistChip(
                 onClick = {},
                 label = {
-                    Text(tipoTexto)
-                }
+                    Text(
+                        text = tipoTexto,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = AssistChipDefaults.assistChipColors(
+                    labelColor = tipoCor
+                )
             )
 
             AssistChip(
                 onClick = {},
                 label = {
-                    Text(statusTexto)
+                    Text(
+                        text = statusTexto,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 colors = AssistChipDefaults.assistChipColors(
-                    labelColor = if (coleta.status == StatusColeta.RASCUNHO.name) {
-                        Color(0xFFD65F00)
-                    } else {
-                        Color(0xFF087B35)
-                    }
+                    labelColor = statusCor
                 )
             )
         }
 
-        Text(
-            text = "Latitude: ${coleta.latitude ?: "-"}",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF7F8F7)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                InfoMapaLinha(
+                    titulo = "Município / UF",
+                    valor = montarMunicipioUf(coleta)
+                )
+
+                InfoMapaLinha(
+                    titulo = "Latitude",
+                    valor = coleta.latitude?.toString() ?: "-"
+                )
+
+                InfoMapaLinha(
+                    titulo = "Longitude",
+                    valor = coleta.longitude?.toString() ?: "-"
+                )
+
+                InfoMapaLinha(
+                    titulo = "Informante",
+                    valor = coleta.informante.ifBlank { "-" }
+                )
+
+                InfoMapaLinha(
+                    titulo = "Contato",
+                    valor = coleta.contatoInformante.ifBlank { "-" }
+                )
+
+                if (!coleta.observacao.isNullOrBlank()) {
+                    InfoMapaLinha(
+                        titulo = "Observação",
+                        valor = coleta.observacao
+                    )
+                }
+            }
+        }
 
         Text(
-            text = "Longitude: ${coleta.longitude ?: "-"}",
-            style = MaterialTheme.typography.bodyMedium
+            text = "Toque em abrir para continuar, editar ou visualizar os dados dessa coleta.",
+            style = MaterialTheme.typography.bodySmall,
+            color = textoCinza
         )
 
         TextButton(
-            onClick = onAbrirClick
+            onClick = onAbrirClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Color(0xFF00823B),
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Text("Abrir coleta")
+            Text(
+                text = "ABRIR COLETA",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
+@Composable
+private fun InfoMapaLinha(
+    titulo: String,
+    valor: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF666666)
+        )
 
+        Text(
+            text = valor,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF222222)
+        )
+    }
+}
+
+private fun montarMunicipioUf(
+    coleta: ColetaEntity
+): String {
+    val municipio = coleta.municipio.ifBlank { "-" }
+    val uf = coleta.uf.ifBlank { "-" }
+
+    return "$municipio/$uf"
+}
 private fun atualizarMarcadores(
     context: Context,
     mapView: MapView,
@@ -416,11 +562,26 @@ private fun atualizarMarcadores(
 
         val marker = Marker(mapView).apply {
             position = GeoPoint(latitude, longitude)
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+            setAnchor(
+                Marker.ANCHOR_CENTER,
+                Marker.ANCHOR_BOTTOM
+            )
+
             title = coleta.nomeReferencia
-            snippet = "${coleta.municipio}/${coleta.uf}"
 
+            snippet = buildString {
+                append("${coleta.municipio}/${coleta.uf}")
+                append(" • ")
 
+                append(
+                    if (coleta.status == StatusColeta.RASCUNHO.name) {
+                        "Rascunho"
+                    } else {
+                        "Concluída"
+                    }
+                )
+            }
 
             setOnMarkerClickListener { _, _ ->
                 onMarkerClick(coleta)
@@ -431,16 +592,8 @@ private fun atualizarMarcadores(
         mapView.overlays.add(marker)
     }
 
-    if (coletas.isNotEmpty()) {
-        centralizarMapa(
-            mapView = mapView,
-            coletas = coletas
-        )
-    }
-
     mapView.invalidate()
 }
-
 private fun centralizarMapa(
     mapView: MapView?,
     coletas: List<ColetaEntity>
@@ -449,15 +602,53 @@ private fun centralizarMapa(
         return
     }
 
-    val primeira = coletas.firstOrNull {
-        it.latitude != null && it.longitude != null
-    } ?: return
+    val pontos = coletas.mapNotNull { coleta ->
+        val lat = coleta.latitude
+        val lon = coleta.longitude
 
-    mapView.controller.setZoom(12.0)
-    mapView.controller.animateTo(
-        GeoPoint(
-            primeira.latitude ?: 0.0,
-            primeira.longitude ?: 0.0
-        )
+        if (lat != null && lon != null) {
+            GeoPoint(lat, lon)
+        } else {
+            null
+        }
+    }
+
+    if (pontos.isEmpty()) {
+        return
+    }
+
+    if (mapView.width <= 0 || mapView.height <= 0) {
+        mapView.post {
+            centralizarMapa(
+                mapView = mapView,
+                coletas = coletas
+            )
+        }
+
+        return
+    }
+
+    if (pontos.size == 1) {
+        mapView.controller.setZoom(14.0)
+        mapView.controller.animateTo(pontos.first())
+        return
+    }
+
+    val norte = pontos.maxOf { it.latitude }
+    val sul = pontos.minOf { it.latitude }
+    val leste = pontos.maxOf { it.longitude }
+    val oeste = pontos.minOf { it.longitude }
+
+    val boundingBox = BoundingBox(
+        norte,
+        leste,
+        sul,
+        oeste
+    )
+
+    mapView.zoomToBoundingBox(
+        boundingBox,
+        true,
+        80
     )
 }

@@ -20,19 +20,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.data.local.entity.GrupoVariavelEntity
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import br.com.agrobox.ruralcoleta.ui.components.CoachMarkOverlay
 
 @Composable
 fun GrupoVariavelListScreen(
     viewModel: GrupoVariavelViewModel,
     onBackClick: () -> Unit,
-    onNovoGrupoClick: () -> Unit
+    onNovoGrupoClick: () -> Unit,
+    mostrarTutorialPrimeiroAcesso: Boolean = false,
+    onTutorialProximoClick: () -> Unit = {},
+    onTutorialPularClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     val verdeEscuro = Color(0xFF003B24)
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
-
+    val novoGrupoBounds = remember {
+        mutableStateOf<Rect?>(null)
+    }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    )
     Scaffold(
         containerColor = fundo,
         topBar = {
@@ -65,7 +79,10 @@ fun GrupoVariavelListScreen(
                 onClick = onNovoGrupoClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(48.dp)
+                    .onGloballyPositioned {
+                        novoGrupoBounds.value = it.boundsInRoot()
+                    },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = verde
@@ -93,6 +110,19 @@ fun GrupoVariavelListScreen(
                 }
             }
         }
+    }
+    if (mostrarTutorialPrimeiroAcesso) {
+        CoachMarkOverlay(
+            targetBounds = novoGrupoBounds.value,
+            passoTexto = "Passo 1 de 3",
+            titulo = "Toque em Novo grupo",
+            descricao = "Aqui você cria o primeiro grupo para organizar as variáveis. Exemplo: Dados do imóvel, Solo, Benfeitorias ou Mercado.",
+            textoBotaoPrimario = "Criar grupo",
+            onBotaoPrimarioClick = onNovoGrupoClick,
+            textoBotaoSecundario = "Próximo",
+            onBotaoSecundarioClick = onTutorialProximoClick,
+            onPularClick = onTutorialPularClick
+        )
     }
 }
 

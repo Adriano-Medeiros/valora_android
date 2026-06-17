@@ -16,6 +16,12 @@ import br.com.agrobox.ruralcoleta.data.local.entity.OpcaoVariavelEntity
 import br.com.agrobox.ruralcoleta.data.local.entity.TipoCampo
 import br.com.agrobox.ruralcoleta.data.local.entity.VariavelEntity
 import br.com.agrobox.ruralcoleta.ui.components.ColetaTopBar
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.viewmodel.compose.viewModel
+import br.com.agrobox.ruralcoleta.ui.components.CampoDataPicker
+import br.com.agrobox.ruralcoleta.util.filtrarDecimal
 
 @Composable
 fun FormularioDinamicoScreen(
@@ -138,7 +144,108 @@ private fun CampoDinamico(
                 onValorChange = onValorChange
             )
         }
-
+        TipoCampo.NUMERO.name -> {
+            OutlinedTextField(
+                value = valor,
+                onValueChange = { novoValor ->
+                    onValorChange(
+                        filtrarDecimal(novoValor)
+                    )
+                },
+                label = {
+                    Text(
+                        text = montarLabel(variavel)
+                    )
+                },
+                isError = temErro,
+                supportingText = {
+                    if (temErro) {
+                        Text("Campo obrigatório")
+                    } else {
+                        variavel.dica?.let {
+                            Text(it)
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                )
+            )
+        }
+        TipoCampo.MOEDA.name -> {
+            OutlinedTextField(
+                value = valor,
+                onValueChange = { novoValor ->
+                    onValorChange(
+                        filtrarDecimal(novoValor)
+                    )
+                },
+                label = {
+                    Text(
+                        text = montarLabel(variavel)
+                    )
+                },
+                isError = temErro,
+                supportingText = {
+                    if (temErro) {
+                        Text("Campo obrigatório")
+                    } else {
+                        variavel.dica?.let {
+                            Text(it)
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                )
+            )
+        }
+        TipoCampo.PERCENTUAL.name -> {
+            OutlinedTextField(
+                value = valor,
+                onValueChange = { novoValor ->
+                    onValorChange(
+                        filtrarDecimal(novoValor)
+                    )
+                },
+                label = {
+                    Text(
+                        text = montarLabel(variavel)
+                    )
+                },
+                isError = temErro,
+                supportingText = {
+                    if (temErro) {
+                        Text("Campo obrigatório")
+                    } else {
+                        variavel.dica?.let {
+                            Text(it)
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                )
+            )
+        }
+        TipoCampo.DATA.name -> {
+            CampoDataPicker(
+                valor = valor,
+                label = montarLabel(variavel),
+                temErro = temErro,
+                textoAjuda = variavel.dica ?: "Toque para selecionar a data",
+                onValorChange = onValorChange
+            )
+        }
         else -> {
             OutlinedTextField(
                 value = valor,

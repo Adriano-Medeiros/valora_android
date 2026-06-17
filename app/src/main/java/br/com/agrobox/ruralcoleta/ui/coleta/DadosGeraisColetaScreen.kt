@@ -26,6 +26,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import br.com.agrobox.ruralcoleta.util.filtrarDecimal
 
 @Composable
 fun DadosGeraisColetaScreen(
@@ -277,26 +281,16 @@ fun DadosGeraisColetaScreen(
 
             OutlinedTextField(
                 value = uiState.contatoInformante,
-
                 onValueChange = viewModel::alterarContatoInformante,
-
                 label = {
-                    Text("Contato do informante ")
+                    Text("Contato do informante")
                 },
-
-                isError = uiState.erroContatoInformante,
-
-                supportingText = {
-
-                    if (uiState.erroContatoInformante) {
-
-                        Text("Campo obrigatório")
-                    }
-                },
-
                 modifier = Modifier.fillMaxWidth(),
-
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next
+                )
             )
 
             Text(
@@ -311,60 +305,68 @@ fun DadosGeraisColetaScreen(
 
             OutlinedTextField(
                 value = uiState.latitude,
-
-                onValueChange = viewModel::alterarLatitude,
-
+                onValueChange = { valor ->
+                    viewModel.alterarLatitude(
+                        filtrarDecimal(
+                            valor = valor,
+                            permitirNegativo = true
+                        )
+                    )
+                },
                 label = {
                     Text("Latitude")
                 },
-
                 modifier = Modifier.fillMaxWidth(),
-
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                ),
                 trailingIcon = {
-
                     IconButton(
                         onClick = {
                             capturarCoordenadas()
                         }
                     ) {
-
                         Icon(
                             imageVector = Icons.Default.MyLocation,
                             contentDescription = "Capturar latitude"
                         )
                     }
-                },
-
-                singleLine = true
+                }
             )
 
             OutlinedTextField(
                 value = uiState.longitude,
-
-                onValueChange = viewModel::alterarLongitude,
-
+                onValueChange = { valor ->
+                    viewModel.alterarLongitude(
+                        filtrarDecimal(
+                            valor = valor,
+                            permitirNegativo = true
+                        )
+                    )
+                },
                 label = {
                     Text("Longitude")
                 },
-
                 modifier = Modifier.fillMaxWidth(),
-
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                ),
                 trailingIcon = {
-
                     IconButton(
                         onClick = {
                             capturarCoordenadas()
                         }
                     ) {
-
                         Icon(
                             imageVector = Icons.Default.MyLocation,
                             contentDescription = "Capturar longitude"
                         )
                     }
-                },
-
-                singleLine = true
+                }
             )
 
             Button(

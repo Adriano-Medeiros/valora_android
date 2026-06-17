@@ -1,13 +1,37 @@
 package br.com.agrobox.ruralcoleta.ui.configuracoes
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,11 +44,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PreferenciasScreen(
     viewModel: PreferenciasViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onIniciarTutorialClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     val verdeEscuro = Color(0xFF003B24)
+    val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
 
     Scaffold(
@@ -84,7 +110,7 @@ fun PreferenciasScreen(
                     Icon(
                         imageVector = Icons.Default.GpsFixed,
                         contentDescription = null,
-                        tint = Color(0xFF00823B)
+                        tint = verde
                     )
                 },
                 onCheckedChange = viewModel::alterarCapturarGpsAutomaticamente
@@ -98,11 +124,12 @@ fun PreferenciasScreen(
                     Icon(
                         imageVector = Icons.Default.Visibility,
                         contentDescription = null,
-                        tint = Color(0xFF00823B)
+                        tint = verde
                     )
                 },
                 onCheckedChange = viewModel::alterarMostrarRascunhosDashboard
             )
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -145,7 +172,7 @@ fun PreferenciasScreen(
                                     )
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFF00823B),
+                                    selectedContainerColor = verde,
                                     selectedLabelColor = Color.White,
                                     containerColor = Color.White,
                                     labelColor = Color.Black
@@ -155,6 +182,13 @@ fun PreferenciasScreen(
                     }
                 }
             }
+
+            TutorialPreferenciasCard(
+                onIniciarTutorialClick = {
+                    viewModel.reiniciarTutorialPrimeiroAcesso()
+                    onIniciarTutorialClick()
+                }
+            )
         }
     }
 }
@@ -201,6 +235,70 @@ private fun PreferenciaItem(
                 checked = checked,
                 onCheckedChange = onCheckedChange
             )
+        }
+    }
+}
+
+@Composable
+private fun TutorialPreferenciasCard(
+    onIniciarTutorialClick: () -> Unit
+) {
+    val verde = Color(0xFF00823B)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayCircle,
+                    contentDescription = null,
+                    tint = verde
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Tutorial de primeiro acesso",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Mostra novamente o passo a passo para criar grupo, variável e formulário de pesquisa.",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            Button(
+                onClick = onIniciarTutorialClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = verde
+                )
+            ) {
+                Text(
+                    text = "VER TUTORIAL NOVAMENTE",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

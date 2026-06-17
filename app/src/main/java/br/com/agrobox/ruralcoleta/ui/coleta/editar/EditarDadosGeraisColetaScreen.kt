@@ -33,8 +33,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,9 +47,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.util.LocationHelper
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import br.com.agrobox.ruralcoleta.util.filtrarDecimal
 
 @Composable
 fun EditarDadosGeraisColetaScreen(
@@ -249,15 +253,15 @@ fun EditarDadosGeraisColetaScreen(
             OutlinedTextField(
                 value = uiState.contatoInformante,
                 onValueChange = viewModel::alterarContatoInformante,
-                label = { Text("Contato do informante") },
-                isError = uiState.erroContatoInformante,
-                supportingText = {
-                    if (uiState.erroContatoInformante) {
-                        Text("Campo obrigatório")
-                    }
+                label = {
+                    Text("Contato do informante")
                 },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next
+                )
             )
 
             Text(
@@ -269,9 +273,23 @@ fun EditarDadosGeraisColetaScreen(
 
             OutlinedTextField(
                 value = uiState.latitude,
-                onValueChange = viewModel::alterarLatitude,
-                label = { Text("Latitude") },
+                onValueChange = { valor ->
+                    viewModel.alterarLatitude(
+                        filtrarDecimal(
+                            valor = valor,
+                            permitirNegativo = true
+                        )
+                    )
+                },
+                label = {
+                    Text("Latitude")
+                },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                ),
                 trailingIcon = {
                     IconButton(
                         onClick = {
@@ -283,15 +301,28 @@ fun EditarDadosGeraisColetaScreen(
                             contentDescription = "Capturar latitude"
                         )
                     }
-                },
-                singleLine = true
+                }
             )
 
             OutlinedTextField(
                 value = uiState.longitude,
-                onValueChange = viewModel::alterarLongitude,
-                label = { Text("Longitude") },
+                onValueChange = { valor ->
+                    viewModel.alterarLongitude(
+                        filtrarDecimal(
+                            valor = valor,
+                            permitirNegativo = true
+                        )
+                    )
+                },
+                label = {
+                    Text("Longitude")
+                },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next
+                ),
                 trailingIcon = {
                     IconButton(
                         onClick = {
@@ -303,8 +334,7 @@ fun EditarDadosGeraisColetaScreen(
                             contentDescription = "Capturar longitude"
                         )
                     }
-                },
-                singleLine = true
+                }
             )
 
             Button(

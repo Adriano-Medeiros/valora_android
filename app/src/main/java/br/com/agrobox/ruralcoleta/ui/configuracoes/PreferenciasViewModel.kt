@@ -42,6 +42,14 @@ class PreferenciasViewModel(
                 )
             }
         }
+
+        viewModelScope.launch {
+            repository.tutorialPrimeiroAcessoConcluido.collect { valor ->
+                _uiState.value = _uiState.value.copy(
+                    tutorialPrimeiroAcessoConcluido = valor
+                )
+            }
+        }
     }
 
     fun alterarCapturarGpsAutomaticamente(
@@ -60,5 +68,9 @@ class PreferenciasViewModel(
         dias: Int
     ) {
         repository.alterarPeriodoAtividadesRecentes(dias)
+    }
+
+    fun reiniciarTutorialPrimeiroAcesso() {
+        repository.reiniciarTutorialPrimeiroAcesso()
     }
 }

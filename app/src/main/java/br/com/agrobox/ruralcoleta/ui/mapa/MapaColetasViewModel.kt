@@ -1,6 +1,5 @@
 package br.com.agrobox.ruralcoleta.ui.mapa
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.agrobox.ruralcoleta.data.local.entity.ColetaEntity
@@ -25,13 +24,6 @@ class MapaColetasViewModel(
     private fun carregarColetas() {
         viewModelScope.launch {
             coletaRepository.listarTodas().collect { coletas ->
-
-                coletas.forEach {
-                    Log.d(
-                        "MAPA",
-                        "ID=${it.id} | ${it.nomeReferencia} | TIPO=${it.tipoColeta} | STATUS=${it.status} | LAT=${it.latitude} | LON=${it.longitude}"
-                    )
-                }
 
                 val coletasComCoordenadas = coletas.filter { coleta ->
                     coleta.latitude != null &&

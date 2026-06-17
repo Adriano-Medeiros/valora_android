@@ -92,6 +92,11 @@ import br.com.agrobox.ruralcoleta.ui.variavel.opcoes.OpcoesVariavelViewModelFact
 import br.com.agrobox.ruralcoleta.ui.mapa.MapaColetasScreen
 import br.com.agrobox.ruralcoleta.ui.mapa.MapaColetasViewModel
 import br.com.agrobox.ruralcoleta.ui.mapa.MapaColetasViewModelFactory
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
@@ -109,7 +114,51 @@ fun AppNavigation(
     preferenciasRepository: PreferenciasRepository,
 ) {
     val navController = rememberNavController()
+    val tutorialPrimeiroAcessoConcluido by preferenciasRepository
+        .tutorialPrimeiroAcessoConcluido
+        .collectAsState()
 
+    var tutorialPrimeiroAcessoAtivo by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var tutorialEtapa by rememberSaveable {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(tutorialPrimeiroAcessoConcluido) {
+        if (!tutorialPrimeiroAcessoConcluido) {
+            tutorialPrimeiroAcessoAtivo = true
+            tutorialEtapa = 0
+        }
+    }
+
+    fun finalizarTutorialPrimeiroAcesso() {
+        preferenciasRepository.marcarTutorialPrimeiroAcessoConcluido()
+
+        tutorialPrimeiroAcessoAtivo = false
+        tutorialEtapa = 0
+
+        navController.navigate(Screen.Dashboard.route) {
+            popUpTo(Screen.Configuracoes.route) {
+                inclusive = true
+            }
+            launchSingleTop = true
+        }
+    }
+
+    fun voltarParaConfiguracoesDoTutorial(
+        proximaEtapa: Int
+    ) {
+        tutorialEtapa = proximaEtapa
+
+        navController.navigate(Screen.Configuracoes.route) {
+            popUpTo(Screen.Configuracoes.route) {
+                inclusive = false
+            }
+            launchSingleTop = true
+        }
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -133,9 +182,20 @@ fun AppNavigation(
             composable(Screen.Splash.route) {
                 SplashScreen(
                     onFinish = {
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.Splash.route) {
-                                inclusive = true
+                        if (tutorialPrimeiroAcessoConcluido) {
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.Splash.route) {
+                                    inclusive = true
+                                }
+                            }
+                        } else {
+                            tutorialPrimeiroAcessoAtivo = true
+                            tutorialEtapa = 0
+
+                            navController.navigate(Screen.Configuracoes.route) {
+                                popUpTo(Screen.Splash.route) {
+                                    inclusive = true
+                                }
                             }
                         }
                     }
@@ -484,6 +544,24 @@ fun AppNavigation(
                     },
                     onSobreAppClick = {
                         navController.navigate(Screen.SobreApp.route)
+                    },
+                    mostrarTutorialPrimeiroAcesso = tutorialPrimeiroAcessoAtivo &&
+                            tutorialEtapa in listOf(0, 2, 4),
+                    tutorialEtapa = tutorialEtapa,
+                    onTutorialAbrirGruposClick = {
+                        tutorialEtapa = 1
+                        navController.navigate(Screen.GruposVariaveis.route)
+                    },
+                    onTutorialAbrirVariaveisClick = {
+                        tutorialEtapa = 3
+                        navController.navigate(Screen.Variaveis.route)
+                    },
+                    onTutorialAbrirModelosClick = {
+                        tutorialEtapa = 5
+                        navController.navigate(Screen.ModelosColeta.route)
+                    },
+                    onTutorialPularClick = {
+                        finalizarTutorialPrimeiroAcesso()
                     }
                 )
             }
@@ -497,6 +575,12 @@ fun AppNavigation(
                 PreferenciasScreen(
                     viewModel = preferenciasViewModel,
                     onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onIniciarTutorialClick = {
+                        tutorialPrimeiroAcessoAtivo = true
+                        tutorialEtapa = 0
+
                         navController.popBackStack()
                     }
                 )
@@ -522,6 +606,16 @@ fun AppNavigation(
                     },
                     onNovoGrupoClick = {
                         navController.navigate(Screen.NovoGrupoVariavel.route)
+                    },
+                    mostrarTutorialPrimeiroAcesso = tutorialPrimeiroAcessoAtivo &&
+                            tutorialEtapa == 1,
+                    onTutorialProximoClick = {
+                        voltarParaConfiguracoesDoTutorial(
+                            proximaEtapa = 2
+                        )
+                    },
+                    onTutorialPularClick = {
+                        finalizarTutorialPrimeiroAcesso()
                     }
                 )
             }
@@ -562,6 +656,16 @@ fun AppNavigation(
                         navController.navigate(
                             Screen.OpcoesVariavel.createRoute(variavelId)
                         )
+                    },
+                    mostrarTutorialPrimeiroAcesso = tutorialPrimeiroAcessoAtivo &&
+                            tutorialEtapa == 3,
+                    onTutorialProximoClick = {
+                        voltarParaConfiguracoesDoTutorial(
+                            proximaEtapa = 4
+                        )
+                    },
+                    onTutorialPularClick = {
+                        finalizarTutorialPrimeiroAcesso()
                     }
                 )
             }
@@ -624,6 +728,14 @@ fun AppNavigation(
                     },
                     onNovoModeloClick = {
                         navController.navigate(Screen.NovoModeloColeta.route)
+                    },
+                    mostrarTutorialPrimeiroAcesso = tutorialPrimeiroAcessoAtivo &&
+                            tutorialEtapa == 5,
+                    onTutorialFinalizarClick = {
+                        finalizarTutorialPrimeiroAcesso()
+                    },
+                    onTutorialPularClick = {
+                        finalizarTutorialPrimeiroAcesso()
                     }
                 )
             }

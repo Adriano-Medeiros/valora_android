@@ -27,6 +27,12 @@ class PreferenciasRepository(
     )
     val periodoAtividadesRecentes = _periodoAtividadesRecentes.asStateFlow()
 
+    private val _tutorialPrimeiroAcessoConcluido = MutableStateFlow(
+        prefs.getBoolean(CHAVE_TUTORIAL_PRIMEIRO_ACESSO_CONCLUIDO, false)
+    )
+    val tutorialPrimeiroAcessoConcluido =
+        _tutorialPrimeiroAcessoConcluido.asStateFlow()
+
     fun alterarCapturarGpsAutomaticamente(
         ativo: Boolean
     ) {
@@ -62,9 +68,28 @@ class PreferenciasRepository(
         _periodoAtividadesRecentes.value = valor
     }
 
+    fun marcarTutorialPrimeiroAcessoConcluido() {
+        prefs.edit()
+            .putBoolean(CHAVE_TUTORIAL_PRIMEIRO_ACESSO_CONCLUIDO, true)
+            .apply()
+
+        _tutorialPrimeiroAcessoConcluido.value = true
+    }
+
+    fun reiniciarTutorialPrimeiroAcesso() {
+        prefs.edit()
+            .putBoolean(CHAVE_TUTORIAL_PRIMEIRO_ACESSO_CONCLUIDO, false)
+            .apply()
+
+        _tutorialPrimeiroAcessoConcluido.value = false
+    }
+
     companion object {
         private const val CHAVE_GPS_AUTOMATICO = "capturar_gps_automaticamente"
         private const val CHAVE_MOSTRAR_RASCUNHOS = "mostrar_rascunhos_dashboard"
         private const val CHAVE_PERIODO_RECENTES = "periodo_atividades_recentes"
+
+        private const val CHAVE_TUTORIAL_PRIMEIRO_ACESSO_CONCLUIDO =
+            "tutorial_primeiro_acesso_concluido"
     }
 }

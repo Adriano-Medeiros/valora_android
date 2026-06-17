@@ -23,18 +23,32 @@ import br.com.agrobox.ruralcoleta.data.local.entity.VariavelEntity
 import androidx.compose.foundation.clickable
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import br.com.agrobox.ruralcoleta.ui.components.CoachMarkOverlay
 @Composable
 fun VariavelListScreen(
     viewModel: VariavelViewModel,
     onBackClick: () -> Unit,
     onNovaVariavelClick: () -> Unit,
-    onOpcoesClick: (Long) -> Unit
+    onOpcoesClick: (Long) -> Unit,
+    mostrarTutorialPrimeiroAcesso: Boolean = false,
+    onTutorialProximoClick: () -> Unit = {},
+    onTutorialPularClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
-
+    val novaVariavelBounds = remember {
+        mutableStateOf<Rect?>(null)
+    }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    )
     Scaffold(
         containerColor = fundo,
         topBar = {
@@ -67,7 +81,8 @@ fun VariavelListScreen(
                 onClick = onNovaVariavelClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(48.dp)
+                .onGloballyPositioned {novaVariavelBounds.value = it.boundsInRoot()},
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = verde
@@ -110,6 +125,19 @@ fun VariavelListScreen(
                 }
             }
         }
+    }
+    if (mostrarTutorialPrimeiroAcesso) {
+        CoachMarkOverlay(
+            targetBounds = novaVariavelBounds.value,
+            passoTexto = "Passo 2 de 3",
+            titulo = "Toque em Nova variável",
+            descricao = "Aqui você cria os campos que serão preenchidos na coleta. Exemplo: área total, tipo de solo, acesso, energia, água ou valor observado.",
+            textoBotaoPrimario = "Criar variável",
+            onBotaoPrimarioClick = onNovaVariavelClick,
+            textoBotaoSecundario = "Próximo",
+            onBotaoSecundarioClick = onTutorialProximoClick,
+            onPularClick = onTutorialPularClick
+        )
     }
 }
 
