@@ -7,7 +7,8 @@ import br.com.agrobox.ruralcoleta.data.repository.VariavelRepository
 
 class ModeloColetaViewModelFactory(
     private val modeloRepository: ModeloColetaRepository,
-    private val variavelRepository: VariavelRepository
+    private val variavelRepository: VariavelRepository,
+    private val modeloId: Long? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -17,7 +18,8 @@ class ModeloColetaViewModelFactory(
         if (modelClass.isAssignableFrom(ModeloColetaViewModel::class.java)) {
             return ModeloColetaViewModel(
                 modeloRepository = modeloRepository,
-                variavelRepository = variavelRepository
+                variavelRepository = variavelRepository,
+                modeloId = modeloId
             ) as T
         }
 

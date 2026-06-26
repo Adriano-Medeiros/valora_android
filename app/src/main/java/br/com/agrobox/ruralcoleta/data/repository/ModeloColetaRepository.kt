@@ -16,10 +16,20 @@ class ModeloColetaRepository(
         return modeloDao.listarAtivos()
     }
 
+    suspend fun buscarModeloPorId(id: Long): ModeloColetaEntity? {
+        return modeloDao.buscarPorId(id)
+    }
+
     fun listarVariaveisDoModelo(
         modeloColetaId: Long
     ): Flow<List<ModeloColetaVariavelEntity>> {
         return modeloVariavelDao.listarPorModelo(modeloColetaId)
+    }
+
+    suspend fun listarIdsVariaveisDoModelo(
+        modeloColetaId: Long
+    ): List<Long> {
+        return modeloVariavelDao.listarIdsPorModelo(modeloColetaId)
     }
 
     suspend fun salvarModelo(
@@ -55,13 +65,14 @@ class ModeloColetaRepository(
             )
         }
 
-        modeloVariavelDao.inserirTodos(itens)
+        if (itens.isNotEmpty()) {
+            modeloVariavelDao.inserirTodos(itens)
+        }
     }
+
     fun listarVariaveisDetalhadasPorModelo(
         modeloColetaId: Long
     ): Flow<List<VariavelEntity>> {
         return modeloVariavelDao.listarVariaveisDetalhadasPorModelo(modeloColetaId)
     }
-
-
 }

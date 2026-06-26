@@ -12,6 +12,10 @@ class GrupoVariavelRepository(
         return dao.listarAtivos()
     }
 
+    suspend fun buscarPorId(id: Long): GrupoVariavelEntity? {
+        return dao.buscarPorId(id)
+    }
+
     suspend fun salvar(grupo: GrupoVariavelEntity): Long {
         return dao.inserir(grupo)
     }

@@ -1,13 +1,38 @@
 package br.com.agrobox.ruralcoleta.ui.modelo
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DynamicForm
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,6 +53,12 @@ fun ModeloColetaFormScreen(
 
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
+
+    val titulo = if (uiState.editando) {
+        "Editar formulário"
+    } else {
+        "Novo formulário"
+    }
 
     Scaffold(
         containerColor = fundo,
@@ -54,7 +85,7 @@ fun ModeloColetaFormScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Novo formulário pesquisa",
+                        text = titulo,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -65,10 +96,11 @@ fun ModeloColetaFormScreen(
                         viewModel.salvarModelo(
                             onSuccess = onSaveSuccess
                         )
-                    }
+                    },
+                    enabled = !uiState.salvando
                 ) {
                     Text(
-                        text = "Salvar",
+                        text = if (uiState.salvando) "Salvando..." else "Salvar",
                         color = verde
                     )
                 }
@@ -114,7 +146,13 @@ fun ModeloColetaFormScreen(
                         Text("Ex.: Coleta rural padrão")
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    isError = uiState.mensagemErro != null,
+                    supportingText = {
+                        uiState.mensagemErro?.let { mensagem ->
+                            Text(mensagem)
+                        }
+                    }
                 )
             }
 
@@ -160,12 +198,23 @@ fun ModeloColetaFormScreen(
             }
 
             item {
-                Text(
-                    text = "Variáveis para pesquisa",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Variáveis para pesquisa",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Marque as variáveis que farão parte deste formulário.",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             items(uiState.variaveis) { variavel ->
@@ -189,7 +238,7 @@ private fun VariavelSelecionavelItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),

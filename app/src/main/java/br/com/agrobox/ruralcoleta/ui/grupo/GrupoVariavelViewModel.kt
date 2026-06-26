@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class GrupoVariavelViewModel(
-    private val repository: GrupoVariavelRepository
+    private val repository: GrupoVariavelRepository,
+    private val grupoId: Long? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GrupoVariavelUiState())
@@ -17,6 +18,10 @@ class GrupoVariavelViewModel(
 
     init {
         carregarGrupos()
+
+        if (grupoId != null) {
+            carregarGrupoParaEdicao(grupoId)
+        }
     }
 
     private fun carregarGrupos() {
@@ -29,9 +34,38 @@ class GrupoVariavelViewModel(
         }
     }
 
+    private fun carregarGrupoParaEdicao(id: Long) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                carregando = true
+            )
+
+            val grupo = repository.buscarPorId(id)
+
+            if (grupo == null) {
+                _uiState.value = _uiState.value.copy(
+                    carregando = false,
+                    mensagemErro = "Grupo não encontrado."
+                )
+                return@launch
+            }
+
+            _uiState.value = _uiState.value.copy(
+                grupoId = grupo.id,
+                nome = grupo.nome,
+                descricao = grupo.descricao.orEmpty(),
+                ordem = grupo.ordem.toString(),
+                ativo = grupo.ativo,
+                carregando = false,
+                mensagemErro = null
+            )
+        }
+    }
+
     fun alterarNome(nome: String) {
         _uiState.value = _uiState.value.copy(
-            nome = nome
+            nome = nome,
+            mensagemErro = null
         )
     }
 
@@ -43,7 +77,7 @@ class GrupoVariavelViewModel(
 
     fun alterarOrdem(ordem: String) {
         _uiState.value = _uiState.value.copy(
-            ordem = ordem
+            ordem = ordem.filter { it.isDigit() }
         )
     }
 
@@ -59,24 +93,35 @@ class GrupoVariavelViewModel(
         val state = _uiState.value
 
         if (state.nome.isBlank()) {
+            _uiState.value = state.copy(
+                mensagemErro = "Informe o nome do grupo."
+            )
             return
         }
 
         viewModelScope.launch {
             _uiState.value = state.copy(
-                salvando = true
+                salvando = true,
+                mensagemErro = null
             )
 
             val grupo = GrupoVariavelEntity(
+                id = state.grupoId ?: 0L,
                 nome = state.nome.trim(),
                 descricao = state.descricao.trim().ifBlank { null },
                 ordem = state.ordem.toIntOrNull() ?: 0,
                 ativo = state.ativo
             )
 
-            repository.salvar(grupo)
+            if (state.editando) {
+                repository.atualizar(grupo)
+            } else {
+                repository.salvar(grupo)
+            }
 
-            _uiState.value = GrupoVariavelUiState()
+            _uiState.value = state.copy(
+                salvando = false
+            )
 
             onSuccess()
         }
