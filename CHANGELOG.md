@@ -1,3 +1,5 @@
+feat: adiciona edicao de grupos variaveis e formularios
+
 # Changelog
 
 ## v0.4.0 - Edição de cadastros estruturais
