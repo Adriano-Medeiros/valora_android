@@ -1,16 +1,16 @@
 # RuralColeta
 
-Aplicativo Android para coleta de dados de imóveis rurais, com foco em organização das informações de campo utilizadas em processos de avaliação rural.
+Aplicativo Android para coleta de dados de imóveis rurais, com foco na organização das informações de campo utilizadas em processos de avaliação rural.
 
-O RuralColeta permite cadastrar formulários personalizados, registrar dados de imóveis avaliandos e amostrais, capturar coordenadas geográficas, registrar fotos, organizar benfeitorias e visualizar as coletas em mapa.
+O RuralColeta permite cadastrar grupos, variáveis e formulários personalizados, registrar dados de imóveis avaliandos e amostrais, capturar coordenadas geográficas, registrar fotos, organizar benfeitorias e visualizar as coletas em mapa.
 
 ---
 
 ## Versão atual
 
 ```kotlin
-versionCode = 3
-versionName = "0.3.0"
+versionCode = 4
+versionName = "0.4.0"
 ```
 
 ---
@@ -19,15 +19,21 @@ versionName = "0.3.0"
 
 O objetivo do RuralColeta é facilitar a coleta padronizada de informações de imóveis rurais diretamente em campo, permitindo que o usuário monte seus próprios formulários de pesquisa conforme a necessidade da avaliação.
 
-O aplicativo não realiza a avaliação do imóvel nem calcula o valor de mercado. Ele atua na etapa de coleta, organização e exportação dos dados.
+O aplicativo não realiza a avaliação do imóvel nem calcula o valor de mercado. Ele atua na etapa de coleta, organização, edição e exportação dos dados coletados.
 
 ---
 
 ## Principais funcionalidades
 
 * Cadastro de grupos de variáveis.
+* Edição de grupos de variáveis.
 * Cadastro de variáveis personalizadas.
+* Edição de variáveis.
+* Cadastro de opções para variáveis do tipo lista.
 * Criação de formulários de pesquisa.
+* Edição de formulários de pesquisa.
+* Vinculação de variáveis aos formulários.
+* Alteração das variáveis vinculadas a um formulário existente.
 * Coleta de dados de imóvel avaliando.
 * Coleta de dados amostrais.
 * Registro de dados gerais da coleta.
@@ -67,6 +73,13 @@ No primeiro uso, o usuário deve configurar a estrutura da coleta:
 9. Cadastrar benfeitorias, se houver.
 10. Revisar o resumo.
 11. Finalizar a coleta.
+
+Caso necessário, o usuário também pode editar posteriormente:
+
+* Grupos de variáveis.
+* Variáveis.
+* Formulários de pesquisa.
+* Coletas já cadastradas.
 
 ---
 
@@ -126,11 +139,42 @@ Tela inicial do aplicativo, exibindo indicadores das coletas, atalhos e informa�
 
 Área onde o usuário acessa os cadastros estruturais do app:
 
-* Grupos de variáveis
-* Variáveis
-* Formulários de pesquisa
-* Preferências
-* Sobre o app
+* Grupos de variáveis.
+* Variáveis.
+* Formulários de pesquisa.
+* Preferências.
+* Sobre o app.
+
+### Grupos de variáveis
+
+Permite cadastrar e editar grupos usados para organizar os campos do formulário.
+
+Exemplos:
+
+* Dados do imóvel.
+* Localização.
+* Solo.
+* Benfeitorias.
+* Mercado.
+* Produção.
+
+### Variáveis
+
+Permite cadastrar e editar os campos que serão preenchidos durante a coleta.
+
+Tipos suportados:
+
+* Texto.
+* Número.
+* Lista.
+* Sim/Não.
+* Data.
+
+### Formulários de pesquisa
+
+Permite criar e editar formulários personalizados, selecionando quais variáveis farão parte da coleta.
+
+O formulário define quais campos serão exibidos na etapa de preenchimento dos dados dinâmicos.
 
 ### Coleta
 
@@ -138,13 +182,13 @@ Fluxo principal para criação e edição de coletas.
 
 Inclui:
 
-* Tipo de coleta
-* Dados gerais
-* Formulário dinâmico
-* Fotos
-* Benfeitorias
-* Resumo
-* Conclusão
+* Tipo de coleta.
+* Dados gerais.
+* Formulário dinâmico.
+* Fotos.
+* Benfeitorias.
+* Resumo.
+* Conclusão.
 
 ### Mapa
 
@@ -152,10 +196,12 @@ Exibe as coletas com coordenadas válidas em um mapa usando OSMDroid.
 
 Permite filtrar por:
 
-* Avaliando
-* Amostral
-* Rascunho
-* Concluída
+* Avaliando.
+* Amostral.
+* Rascunho.
+* Concluída.
+
+Ao clicar em um marcador, o app exibe um BottomSheet com detalhes da coleta e opção para abrir o registro.
 
 ### Preferências
 
@@ -250,8 +296,8 @@ defaultConfig {
     applicationId = "br.com.agrobox.ruralcoleta"
     minSdk = 26
     targetSdk = 36
-    versionCode = 3
-    versionName = "0.3.0"
+    versionCode = 4
+    versionName = "0.4.0"
 }
 ```
 
@@ -311,6 +357,12 @@ Para limpar e compilar:
 .\gradlew clean build
 ```
 
+Caso o terminal não reconheça o Java, configure o `JAVA_HOME` apontando para o Java do Android Studio, normalmente em:
+
+```text
+C:\Program Files\Android\Android Studio\jbr
+```
+
 ---
 
 ## Status atual
@@ -318,11 +370,14 @@ Para limpar e compilar:
 Versão atual:
 
 ```text
-v0.3.0
+v0.4.0
 ```
 
 Esta versão inclui:
 
+* Edição de grupos de variáveis.
+* Edição de variáveis.
+* Edição de formulários de pesquisa.
 * Mapa estável com OSMDroid.
 * Correção de travamento ao voltar do mapa.
 * BottomSheet com detalhes da coleta.
@@ -343,7 +398,7 @@ Esta versão inclui:
 * Melhorar tela de histórico.
 * Melhorar tela de detalhes da coleta.
 * Criar backup/restauração local dos dados.
-* Integração futura com backend web.
+* Avaliar integração futura com backend web.
 
 ---
 
