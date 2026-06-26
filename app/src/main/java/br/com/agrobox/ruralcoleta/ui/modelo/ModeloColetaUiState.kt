@@ -7,11 +7,17 @@ data class ModeloColetaUiState(
     val modelos: List<ModeloColetaEntity> = emptyList(),
     val variaveis: List<VariavelEntity> = emptyList(),
 
+    val modeloId: Long? = null,
     val nome: String = "",
     val descricao: String = "",
     val ativo: Boolean = true,
 
     val variaveisSelecionadas: Set<Long> = emptySet(),
 
-    val salvando: Boolean = false
-)
+    val carregando: Boolean = false,
+    val salvando: Boolean = false,
+    val mensagemErro: String? = null
+) {
+    val editando: Boolean
+        get() = modeloId != null
+}

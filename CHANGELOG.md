@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.4.0 - Edição de cadastros estruturais
+
+### Adicionado
+- Adicionada edição de grupos de variáveis.
+- Adicionada edição de variáveis.
+- Adicionada edição de formulários de pesquisa.
+- Adicionadas rotas específicas para edição de grupo, variável e formulário.
+- Adicionado carregamento dos dados existentes nas telas de edição.
+- Adicionada atualização de registros existentes nos repositórios.
+- Adicionada busca por ID para grupos, variáveis e formulários.
+
+### Melhorado
+- Melhorado o fluxo dos cadastros estruturais do app.
+- Melhorada a reutilização das telas de formulário para cadastro e edição.
+- Melhorada a navegação entre listagem e edição.
+- Melhorado o controle entre criação de novo registro e atualização de registro existente.
+
+### Técnico
+- Atualizado versionCode para 4.
+- Atualizado versionName para 0.4.0.
+- Mantida a estrutura atual do banco Room, sem necessidade de migration.
+
 ## v0.3.0 - Mapa estável, campos inteligentes e tutorial guiado
 
 ### Adicionado
@@ -55,3 +77,4 @@
 - Mantida a versão como fonte única no Gradle.
 - Criado utilitário AppInfo para exibir a versão no app.
 - Mantido o marker padrão do OSMDroid para estabilidade.
+

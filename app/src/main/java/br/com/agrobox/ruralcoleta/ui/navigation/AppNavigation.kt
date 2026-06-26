@@ -607,6 +607,11 @@ fun AppNavigation(
                     onNovoGrupoClick = {
                         navController.navigate(Screen.NovoGrupoVariavel.route)
                     },
+                    onEditarGrupoClick = { grupoId ->
+                        navController.navigate(
+                            Screen.EditarGrupoVariavel.createRoute(grupoId)
+                        )
+                    },
                     mostrarTutorialPrimeiroAcesso = tutorialPrimeiroAcessoAtivo &&
                             tutorialEtapa == 1,
                     onTutorialProximoClick = {
@@ -636,6 +641,34 @@ fun AppNavigation(
                 )
             }
 
+            composable(
+                route = Screen.EditarGrupoVariavel.route,
+                arguments = listOf(
+                    navArgument("grupoId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val grupoId = backStackEntry.arguments?.getLong("grupoId") ?: 0L
+
+                val grupoViewModel: GrupoVariavelViewModel = viewModel(
+                    factory = GrupoVariavelViewModelFactory(
+                        repository = grupoVariavelRepository,
+                        grupoId = grupoId
+                    )
+                )
+
+                GrupoVariavelFormScreen(
+                    viewModel = grupoViewModel,
+                    onCancelClick = {
+                        navController.popBackStack()
+                    },
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable(Screen.Variaveis.route) {
                 val variavelViewModel: VariavelViewModel = viewModel(
                     factory = VariavelViewModelFactory(
@@ -651,6 +684,11 @@ fun AppNavigation(
                     },
                     onNovaVariavelClick = {
                         navController.navigate(Screen.NovaVariavel.route)
+                    },
+                    onEditarVariavelClick = { variavelId ->
+                        navController.navigate(
+                            Screen.EditarVariavel.createRoute(variavelId)
+                        )
                     },
                     onOpcoesClick = { variavelId ->
                         navController.navigate(
@@ -713,6 +751,35 @@ fun AppNavigation(
                 )
             }
 
+            composable(
+                route = Screen.EditarVariavel.route,
+                arguments = listOf(
+                    navArgument("variavelId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val variavelId = backStackEntry.arguments?.getLong("variavelId") ?: 0L
+
+                val variavelViewModel: VariavelViewModel = viewModel(
+                    factory = VariavelViewModelFactory(
+                        variavelRepository = variavelRepository,
+                        grupoRepository = grupoVariavelRepository,
+                        variavelId = variavelId
+                    )
+                )
+
+                VariavelFormScreen(
+                    viewModel = variavelViewModel,
+                    onCancelClick = {
+                        navController.popBackStack()
+                    },
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable(Screen.ModelosColeta.route) {
                 val modeloViewModel: ModeloColetaViewModel = viewModel(
                     factory = ModeloColetaViewModelFactory(
@@ -728,6 +795,11 @@ fun AppNavigation(
                     },
                     onNovoModeloClick = {
                         navController.navigate(Screen.NovoModeloColeta.route)
+                    },
+                    onEditarModeloClick = { modeloId ->
+                        navController.navigate(
+                            Screen.EditarModeloColeta.createRoute(modeloId)
+                        )
                     },
                     mostrarTutorialPrimeiroAcesso = tutorialPrimeiroAcessoAtivo &&
                             tutorialEtapa == 5,
@@ -745,6 +817,35 @@ fun AppNavigation(
                     factory = ModeloColetaViewModelFactory(
                         modeloRepository = modeloColetaRepository,
                         variavelRepository = variavelRepository
+                    )
+                )
+
+                ModeloColetaFormScreen(
+                    viewModel = modeloViewModel,
+                    onCancelClick = {
+                        navController.popBackStack()
+                    },
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.EditarModeloColeta.route,
+                arguments = listOf(
+                    navArgument("modeloId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val modeloId = backStackEntry.arguments?.getLong("modeloId") ?: 0L
+
+                val modeloViewModel: ModeloColetaViewModel = viewModel(
+                    factory = ModeloColetaViewModelFactory(
+                        modeloRepository = modeloColetaRepository,
+                        variavelRepository = variavelRepository,
+                        modeloId = modeloId
                     )
                 )
 

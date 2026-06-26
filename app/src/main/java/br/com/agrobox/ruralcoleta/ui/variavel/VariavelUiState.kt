@@ -8,6 +8,7 @@ data class VariavelUiState(
     val variaveis: List<VariavelEntity> = emptyList(),
     val grupos: List<GrupoVariavelEntity> = emptyList(),
 
+    val variavelId: Long? = null,
     val nome: String = "",
     val tipoCampo: TipoCampo = TipoCampo.TEXTO,
     val unidade: String = "",
@@ -16,5 +17,10 @@ data class VariavelUiState(
     val dica: String = "",
     val ativo: Boolean = true,
 
-    val salvando: Boolean = false
-)
+    val carregando: Boolean = false,
+    val salvando: Boolean = false,
+    val mensagemErro: String? = null
+) {
+    val editando: Boolean
+        get() = variavelId != null
+}

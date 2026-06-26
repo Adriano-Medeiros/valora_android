@@ -1,13 +1,33 @@
 package br.com.agrobox.ruralcoleta.ui.grupo
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CreateNewFolder
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -27,6 +48,12 @@ fun GrupoVariavelFormScreen(
 
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
+
+    val titulo = if (uiState.editando) {
+        "Editar grupo"
+    } else {
+        "Novo grupo"
+    }
 
     Scaffold(
         containerColor = fundo,
@@ -53,7 +80,7 @@ fun GrupoVariavelFormScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Novo grupo",
+                        text = titulo,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -64,10 +91,11 @@ fun GrupoVariavelFormScreen(
                         viewModel.salvarGrupo(
                             onSuccess = onSaveSuccess
                         )
-                    }
+                    },
+                    enabled = !uiState.salvando
                 ) {
                     Text(
-                        text = "Salvar",
+                        text = if (uiState.salvando) "Salvando..." else "Salvar",
                         color = verde
                     )
                 }
@@ -112,7 +140,13 @@ fun GrupoVariavelFormScreen(
                     Text("Ex.: Recursos naturais")
                 },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = uiState.mensagemErro != null,
+                supportingText = {
+                    uiState.mensagemErro?.let { mensagem ->
+                        Text(mensagem)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -139,7 +173,10 @@ fun GrupoVariavelFormScreen(
                     Text("Ordem de exibição")
                 },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                )
             )
 
             Spacer(modifier = Modifier.height(6.dp))

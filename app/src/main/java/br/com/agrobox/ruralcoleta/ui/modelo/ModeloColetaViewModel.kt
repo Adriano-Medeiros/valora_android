@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 
 class ModeloColetaViewModel(
     private val modeloRepository: ModeloColetaRepository,
-    private val variavelRepository: VariavelRepository
+    private val variavelRepository: VariavelRepository,
+    private val modeloId: Long? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ModeloColetaUiState())
@@ -20,6 +21,10 @@ class ModeloColetaViewModel(
     init {
         carregarModelos()
         carregarVariaveis()
+
+        if (modeloId != null) {
+            carregarModeloParaEdicao(modeloId)
+        }
     }
 
     private fun carregarModelos() {
@@ -42,8 +47,43 @@ class ModeloColetaViewModel(
         }
     }
 
+    private fun carregarModeloParaEdicao(id: Long) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                carregando = true
+            )
+
+            val modelo = modeloRepository.buscarModeloPorId(id)
+
+            if (modelo == null) {
+                _uiState.value = _uiState.value.copy(
+                    carregando = false,
+                    mensagemErro = "Formulário não encontrado."
+                )
+                return@launch
+            }
+
+            val idsSelecionados = modeloRepository
+                .listarIdsVariaveisDoModelo(id)
+                .toSet()
+
+            _uiState.value = _uiState.value.copy(
+                modeloId = modelo.id,
+                nome = modelo.nome,
+                descricao = modelo.descricao.orEmpty(),
+                ativo = modelo.ativo,
+                variaveisSelecionadas = idsSelecionados,
+                carregando = false,
+                mensagemErro = null
+            )
+        }
+    }
+
     fun alterarNome(nome: String) {
-        _uiState.value = _uiState.value.copy(nome = nome)
+        _uiState.value = _uiState.value.copy(
+            nome = nome,
+            mensagemErro = null
+        )
     }
 
     fun alterarDescricao(descricao: String) {
@@ -74,26 +114,40 @@ class ModeloColetaViewModel(
         val state = _uiState.value
 
         if (state.nome.isBlank()) {
+            _uiState.value = state.copy(
+                mensagemErro = "Informe o nome do formulário."
+            )
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = state.copy(salvando = true)
+            _uiState.value = state.copy(
+                salvando = true,
+                mensagemErro = null
+            )
 
             val modelo = ModeloColetaEntity(
+                id = state.modeloId ?: 0L,
                 nome = state.nome.trim(),
                 descricao = state.descricao.trim().ifBlank { null },
                 ativo = state.ativo
             )
 
-            val modeloId = modeloRepository.salvarModelo(modelo)
+            val modeloIdSalvo = if (state.editando) {
+                modeloRepository.atualizarModelo(modelo)
+                modelo.id
+            } else {
+                modeloRepository.salvarModelo(modelo)
+            }
 
             modeloRepository.salvarVariaveisDoModelo(
-                modeloColetaId = modeloId,
+                modeloColetaId = modeloIdSalvo,
                 variaveisIds = state.variaveisSelecionadas.toList()
             )
 
-            _uiState.value = ModeloColetaUiState()
+            _uiState.value = state.copy(
+                salvando = false
+            )
 
             onSuccess()
         }

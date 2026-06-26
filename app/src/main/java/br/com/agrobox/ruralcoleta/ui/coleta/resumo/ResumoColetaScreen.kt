@@ -62,7 +62,7 @@ fun ResumoColetaScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Coleta registrada",
+                        text = "Dado registrado",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )

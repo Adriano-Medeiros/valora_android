@@ -16,6 +16,10 @@ class VariavelRepository(
         return dao.listarPorGrupo(grupoId)
     }
 
+    suspend fun buscarPorId(id: Long): VariavelEntity? {
+        return dao.buscarPorId(id)
+    }
+
     suspend fun salvar(variavel: VariavelEntity): Long {
         return dao.inserir(variavel)
     }

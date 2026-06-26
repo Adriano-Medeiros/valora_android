@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 
 class VariavelViewModel(
     private val variavelRepository: VariavelRepository,
-    private val grupoRepository: GrupoVariavelRepository
+    private val grupoRepository: GrupoVariavelRepository,
+    private val variavelId: Long? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VariavelUiState())
@@ -21,6 +22,10 @@ class VariavelViewModel(
     init {
         carregarVariaveis()
         carregarGrupos()
+
+        if (variavelId != null) {
+            carregarVariavelParaEdicao(variavelId)
+        }
     }
 
     private fun carregarVariaveis() {
@@ -43,8 +48,46 @@ class VariavelViewModel(
         }
     }
 
+    private fun carregarVariavelParaEdicao(id: Long) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                carregando = true
+            )
+
+            val variavel = variavelRepository.buscarPorId(id)
+
+            if (variavel == null) {
+                _uiState.value = _uiState.value.copy(
+                    carregando = false,
+                    mensagemErro = "Variável não encontrada."
+                )
+                return@launch
+            }
+
+            val tipoCampo = TipoCampo.entries.firstOrNull {
+                it.name == variavel.tipoCampo
+            } ?: TipoCampo.TEXTO
+
+            _uiState.value = _uiState.value.copy(
+                variavelId = variavel.id,
+                nome = variavel.nome,
+                tipoCampo = tipoCampo,
+                unidade = variavel.unidade.orEmpty(),
+                grupoId = variavel.grupoId,
+                obrigatoria = variavel.obrigatoria,
+                dica = variavel.dica.orEmpty(),
+                ativo = variavel.ativo,
+                carregando = false,
+                mensagemErro = null
+            )
+        }
+    }
+
     fun alterarNome(nome: String) {
-        _uiState.value = _uiState.value.copy(nome = nome)
+        _uiState.value = _uiState.value.copy(
+            nome = nome,
+            mensagemErro = null
+        )
     }
 
     fun alterarTipoCampo(tipoCampo: TipoCampo) {
@@ -77,13 +120,20 @@ class VariavelViewModel(
         val state = _uiState.value
 
         if (state.nome.isBlank()) {
+            _uiState.value = state.copy(
+                mensagemErro = "Informe o nome da variável."
+            )
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = state.copy(salvando = true)
+            _uiState.value = state.copy(
+                salvando = true,
+                mensagemErro = null
+            )
 
             val variavel = VariavelEntity(
+                id = state.variavelId ?: 0L,
                 nome = state.nome.trim(),
                 tipoCampo = state.tipoCampo.name,
                 unidade = state.unidade.trim().ifBlank { null },
@@ -93,9 +143,15 @@ class VariavelViewModel(
                 ativo = state.ativo
             )
 
-            variavelRepository.salvar(variavel)
+            if (state.editando) {
+                variavelRepository.atualizar(variavel)
+            } else {
+                variavelRepository.salvar(variavel)
+            }
 
-            _uiState.value = VariavelUiState()
+            _uiState.value = state.copy(
+                salvando = false
+            )
 
             onSuccess()
         }
