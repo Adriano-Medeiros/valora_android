@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -33,7 +32,7 @@ class PdfExportService {
     private val larguraPagina = 595
     private val alturaPagina = 842
     private val margem = 42f
-    private val rodapeAltura = 36f
+    private val rodapeAltura = 42f
     private val larguraConteudo = larguraPagina - (margem * 2)
 
     fun exportarRelatorioPdf(
@@ -69,11 +68,7 @@ class PdfExportService {
         val escritor = EscritorPdf(documento)
 
         dados.coletas.forEachIndexed { index, coleta ->
-            if (index == 0) {
-                escritor.novaPagina()
-            } else {
-                escritor.novaPagina()
-            }
+            escritor.novaPagina()
 
             desenharRelatorioDaColeta(
                 context = context,
@@ -104,28 +99,31 @@ class PdfExportService {
         numeroColeta: Int,
         totalColetas: Int
     ) {
-        escritor.titulo("Relatório de Coleta Rural")
-
-        if (totalColetas > 1) {
-            escritor.subtitulo("Coleta $numeroColeta de $totalColetas")
-        }
-
-        escritor.espaco(8f)
-
-        desenharResumoInicial(
-            escritor = escritor,
-            coleta = coleta
+        escritor.cabecalhoRelatorio(
+            titulo = "Relatório de Coleta Rural",
+            subtitulo = if (totalColetas > 1) {
+                "Coleta $numeroColeta de $totalColetas"
+            } else {
+                "Relatório individual da coleta"
+            },
+            nomeReferencia = coleta.nomeReferencia,
+            tipo = formatarTipoColeta(coleta.tipoColeta),
+            status = formatarStatus(coleta.status)
         )
 
-        desenharDadosGerais(
+        desenharResumoInicial(
             escritor = escritor,
             coleta = coleta,
             nomeFormulario = dados.modelo?.nome.orEmpty()
         )
 
+        desenharDadosGerais(
+            escritor = escritor,
+            coleta = coleta
+        )
+
         desenharRespostas(
             escritor = escritor,
-            coleta = coleta,
             variaveis = dados.variaveis,
             respostas = dados.respostasPorColeta[coleta.id].orEmpty()
         )
@@ -151,46 +149,50 @@ class PdfExportService {
 
     private fun desenharResumoInicial(
         escritor: EscritorPdf,
-        coleta: ColetaEntity
+        coleta: ColetaEntity,
+        nomeFormulario: String
     ) {
-        escritor.caixaDestaque {
-            campo("Imóvel/referência", coleta.nomeReferencia)
-            campo("Tipo da coleta", formatarTipoColeta(coleta.tipoColeta))
-            campo("Status", formatarStatus(coleta.status))
-            campo("Data da coleta", formatarDataHora(coleta.dataColeta))
+        escritor.cardResumo(
+            titulo = "Resumo da coleta"
+        ) {
+            campoDuasColunas("Imóvel/referência", coleta.nomeReferencia)
+            campoDuasColunas("Formulário", nomeFormulario.ifBlank { "Não informado" })
+            campoDuasColunas("Tipo", formatarTipoColeta(coleta.tipoColeta))
+            campoDuasColunas("Status", formatarStatus(coleta.status))
+            campoDuasColunas("Data da coleta", formatarDataHora(coleta.dataColeta))
+            campoDuasColunas("Município/UF", montarMunicipioUf(coleta))
         }
     }
 
     private fun desenharDadosGerais(
         escritor: EscritorPdf,
-        coleta: ColetaEntity,
-        nomeFormulario: String
+        coleta: ColetaEntity
     ) {
         escritor.secao("1. Dados gerais")
 
-        escritor.campo("Formulário", nomeFormulario.ifBlank { "Não informado" })
-        escritor.campo("Município", coleta.municipio)
-        escritor.campo("UF", coleta.uf)
-        escritor.campo("Informante", coleta.informante)
-        escritor.campo("Contato do informante", coleta.contatoInformante)
-        escritor.campo("Latitude", coleta.latitude?.toString().orEmpty())
-        escritor.campo("Longitude", coleta.longitude?.toString().orEmpty())
+        escritor.tabelaCampos {
+            linha("Município", coleta.municipio)
+            linha("UF", coleta.uf)
+            linha("Informante", coleta.informante)
+            linha("Contato do informante", coleta.contatoInformante)
+            linha("Latitude", coleta.latitude?.toString().orEmpty())
+            linha("Longitude", coleta.longitude?.toString().orEmpty())
 
-        if (!coleta.observacao.isNullOrBlank()) {
-            escritor.campo("Observação", coleta.observacao)
+            if (!coleta.observacao.isNullOrBlank()) {
+                linha("Observação", coleta.observacao)
+            }
         }
     }
 
     private fun desenharRespostas(
         escritor: EscritorPdf,
-        coleta: ColetaEntity,
         variaveis: List<VariavelEntity>,
         respostas: List<RespostaColetaEntity>
     ) {
         escritor.secao("2. Variáveis respondidas")
 
         if (variaveis.isEmpty()) {
-            escritor.textoSecundario("Nenhuma variável vinculada ao formulário desta coleta.")
+            escritor.aviso("Nenhuma variável vinculada ao formulário desta coleta.")
             return
         }
 
@@ -198,18 +200,20 @@ class PdfExportService {
             resposta.variavelId
         }
 
-        variaveis.forEach { variavel ->
-            val resposta = respostasPorVariavel[variavel.id]
-            val nome = if (variavel.unidade.isNullOrBlank()) {
-                variavel.nome
-            } else {
-                "${variavel.nome} (${variavel.unidade})"
-            }
+        escritor.tabelaCampos {
+            variaveis.forEach { variavel ->
+                val resposta = respostasPorVariavel[variavel.id]
+                val nome = if (variavel.unidade.isNullOrBlank()) {
+                    variavel.nome
+                } else {
+                    "${variavel.nome} (${variavel.unidade})"
+                }
 
-            escritor.campo(
-                rotulo = nome,
-                valor = formatarResposta(resposta)
-            )
+                linha(
+                    rotulo = nome,
+                    valor = formatarResposta(resposta)
+                )
+            }
         }
     }
 
@@ -220,21 +224,21 @@ class PdfExportService {
         escritor.secao("3. Benfeitorias")
 
         if (benfeitorias.isEmpty()) {
-            escritor.textoSecundario("Nenhuma benfeitoria cadastrada nesta coleta.")
+            escritor.aviso("Nenhuma benfeitoria cadastrada nesta coleta.")
             return
         }
 
         benfeitorias.forEachIndexed { index, benfeitoria ->
-            escritor.bloco(
-                titulo = "${index + 1}. ${benfeitoria.nome.ifBlank { benfeitoria.categoria }}"
+            escritor.cardBenfeitoria(
+                titulo = "${index + 1}. ${benfeitoria.nome.ifBlank { benfeitoria.categoria.ifBlank { "Benfeitoria" } }}"
             ) {
-                campo("Categoria", benfeitoria.categoria)
-                campo("Nome", benfeitoria.nome)
-                campo("Descrição", benfeitoria.descricao.orEmpty())
-                campo("Quantidade", formatarQuantidade(benfeitoria))
-                campo("Estado de conservação", benfeitoria.estadoConservacao.orEmpty())
-                campo("Idade aproximada", benfeitoria.idadeAproximada?.let { "$it anos" }.orEmpty())
-                campo("Observação", benfeitoria.observacao.orEmpty())
+                linha("Categoria", benfeitoria.categoria)
+                linha("Nome", benfeitoria.nome)
+                linha("Descrição", benfeitoria.descricao.orEmpty())
+                linha("Quantidade", formatarQuantidade(benfeitoria))
+                linha("Estado de conservação", benfeitoria.estadoConservacao.orEmpty())
+                linha("Idade aproximada", benfeitoria.idadeAproximada?.let { "$it anos" }.orEmpty())
+                linha("Observação", benfeitoria.observacao.orEmpty())
             }
         }
     }
@@ -247,23 +251,25 @@ class PdfExportService {
         escritor.secao("4. Fotos gerais")
 
         if (fotos.isEmpty()) {
-            escritor.textoSecundario("Nenhuma foto geral cadastrada nesta coleta.")
+            escritor.aviso("Nenhuma foto geral cadastrada nesta coleta.")
             return
         }
 
-        fotos.forEachIndexed { index, foto ->
-            escritor.foto(
-                context = context,
-                caminho = foto.caminhoArquivo,
-                titulo = "Foto geral ${index + 1}",
-                legenda = montarLegendaFoto(
-                    legenda = foto.legenda,
-                    latitude = foto.latitude,
-                    longitude = foto.longitude,
-                    dataHora = foto.dataHora
+        escritor.gradeFotos(
+            context = context,
+            fotos = fotos.mapIndexed { index, foto ->
+                FotoPdfItem(
+                    caminho = foto.caminhoArquivo,
+                    titulo = "Foto geral ${index + 1}",
+                    legenda = montarLegendaFoto(
+                        legenda = foto.legenda,
+                        latitude = foto.latitude,
+                        longitude = foto.longitude,
+                        dataHora = foto.dataHora
+                    )
                 )
-            )
-        }
+            }
+        )
     }
 
     private fun desenharFotosDasBenfeitorias(
@@ -275,7 +281,7 @@ class PdfExportService {
         escritor.secao("5. Fotos das benfeitorias")
 
         if (benfeitorias.isEmpty()) {
-            escritor.textoSecundario("Nenhuma benfeitoria cadastrada para exibir fotos.")
+            escritor.aviso("Nenhuma benfeitoria cadastrada para exibir fotos.")
             return
         }
 
@@ -286,26 +292,33 @@ class PdfExportService {
 
             if (fotos.isNotEmpty()) {
                 possuiFoto = true
-                escritor.subtitulo(benfeitoria.nome.ifBlank { benfeitoria.categoria })
-            }
 
-            fotos.forEachIndexed { index, foto ->
-                escritor.foto(
+                escritor.subtituloBloco(
+                    benfeitoria.nome.ifBlank {
+                        benfeitoria.categoria.ifBlank { "Benfeitoria" }
+                    }
+                )
+
+                escritor.gradeFotos(
                     context = context,
-                    caminho = foto.caminhoArquivo,
-                    titulo = "Foto ${index + 1}",
-                    legenda = montarLegendaFoto(
-                        legenda = foto.legenda,
-                        latitude = foto.latitude,
-                        longitude = foto.longitude,
-                        dataHora = foto.dataHora
-                    )
+                    fotos = fotos.mapIndexed { index, foto ->
+                        FotoPdfItem(
+                            caminho = foto.caminhoArquivo,
+                            titulo = "Foto ${index + 1}",
+                            legenda = montarLegendaFoto(
+                                legenda = foto.legenda,
+                                latitude = foto.latitude,
+                                longitude = foto.longitude,
+                                dataHora = foto.dataHora
+                            )
+                        )
+                    }
                 )
             }
         }
 
         if (!possuiFoto) {
-            escritor.textoSecundario("Nenhuma foto de benfeitoria cadastrada nesta coleta.")
+            escritor.aviso("Nenhuma foto de benfeitoria cadastrada nesta coleta.")
         }
     }
 
@@ -360,13 +373,21 @@ class PdfExportService {
         return partes.joinToString(" | ")
     }
 
+    private fun montarMunicipioUf(
+        coleta: ColetaEntity
+    ): String {
+        val municipio = coleta.municipio.ifBlank { "Não informado" }
+        val uf = coleta.uf.ifBlank { "Não informado" }
+        return "$municipio/$uf"
+    }
+
     private fun formatarTipoColeta(
         valor: String
     ): String {
         return when (valor.uppercase()) {
             "AVALIANDO" -> "Imóvel avaliando"
             "AMOSTRAL" -> "Dado amostral"
-            else -> valor
+            else -> valor.ifBlank { "Não informado" }
         }
     }
 
@@ -376,7 +397,7 @@ class PdfExportService {
         return when (valor.uppercase()) {
             "RASCUNHO" -> "Rascunho"
             "CONCLUIDA" -> "Concluída"
-            else -> valor
+            else -> valor.ifBlank { "Não informado" }
         }
     }
 
@@ -510,6 +531,12 @@ class PdfExportService {
         return max(1, inSampleSize)
     }
 
+    private data class FotoPdfItem(
+        val caminho: String,
+        val titulo: String,
+        val legenda: String
+    )
+
     private inner class EscritorPdf(
         private val documento: PdfDocument
     ) {
@@ -517,62 +544,110 @@ class PdfExportService {
         private var canvas: Canvas? = null
         private var numeroPagina = 0
         private var y = margem
+        private val dataGeracao = SimpleDateFormat(
+            "dd/MM/yyyy HH:mm",
+            Locale("pt", "BR")
+        ).format(Date())
 
-        private val paintTitulo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(0, 96, 52)
+        private val verdeEscuro = Color.rgb(0, 72, 42)
+        private val verde = Color.rgb(0, 128, 72)
+        private val verdeClaro = Color.rgb(232, 245, 238)
+        private val cinzaTexto = Color.rgb(45, 45, 45)
+        private val cinzaSecundario = Color.rgb(105, 105, 105)
+        private val cinzaLinha = Color.rgb(222, 226, 223)
+        private val cinzaFundo = Color.rgb(248, 250, 249)
+        private val branco = Color.WHITE
+
+        private val paintTituloPrincipal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = branco
             textSize = 20f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         }
 
-        private val paintSubtitulo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(40, 40, 40)
-            textSize = 14f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        }
-
-        private val paintSecao = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            textSize = 13f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        }
-
-        private val paintSecaoFundo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(0, 130, 59)
-            style = Paint.Style.FILL
-        }
-
-        private val paintRotulo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(35, 35, 35)
-            textSize = 10.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        }
-
-        private val paintTexto = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(45, 45, 45)
+        private val paintTituloSecundario = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(225, 244, 234)
             textSize = 10.5f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         }
 
-        private val paintTextoSecundario = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(100, 100, 100)
-            textSize = 10.5f
+        private val paintCabecalhoNome = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = branco
+            textSize = 13.5f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
+        private val paintMarca = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = branco
+            textSize = 15f
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
+        private val paintSecao = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = verdeEscuro
+            textSize = 13.5f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
+        private val paintSubtitulo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(35, 35, 35)
+            textSize = 12f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
+        private val paintRotulo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(80, 80, 80)
+            textSize = 9.7f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
+        private val paintTexto = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = cinzaTexto
+            textSize = 10.2f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        }
+
+        private val paintTextoPequeno = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = cinzaSecundario
+            textSize = 8.7f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        }
+
+        private val paintAviso = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(95, 95, 95)
+            textSize = 10.2f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
         }
 
         private val paintLinha = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(220, 220, 220)
+            color = cinzaLinha
             strokeWidth = 1f
         }
 
-        private val paintCaixaFundo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(245, 250, 247)
+        private val paintBorda = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = cinzaLinha
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+
+        private val paintCardFundo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = cinzaFundo
             style = Paint.Style.FILL
         }
 
-        private val paintCaixaBorda = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(205, 225, 215)
-            style = Paint.Style.STROKE
-            strokeWidth = 1f
+        private val paintCardDestaque = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = verdeClaro
+            style = Paint.Style.FILL
+        }
+
+        private val paintVerde = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = verde
+            style = Paint.Style.FILL
+        }
+
+        private val paintVerdeEscuro = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = verdeEscuro
+            style = Paint.Style.FILL
         }
 
         fun novaPagina() {
@@ -589,134 +664,110 @@ class PdfExportService {
             paginaAtual = documento.startPage(pageInfo)
             canvas = paginaAtual?.canvas
             y = margem
+            desenharFundoPagina()
         }
 
         fun finalizar() {
             fecharPaginaAtual()
         }
 
-        fun titulo(texto: String) {
-            garantirEspaco(36f)
-            canvas?.drawText(
-                texto,
-                margem,
-                y,
-                paintTitulo
-            )
-            y += 24f
-            linhaHorizontal()
-            espaco(10f)
-        }
+        fun cabecalhoRelatorio(
+            titulo: String,
+            subtitulo: String,
+            nomeReferencia: String,
+            tipo: String,
+            status: String
+        ) {
+            garantirEspaco(132f)
 
-        fun subtitulo(texto: String) {
-            garantirEspaco(26f)
-            canvas?.drawText(
-                texto,
-                margem,
-                y,
-                paintSubtitulo
-            )
-            y += 18f
-        }
-
-        fun secao(texto: String) {
-            garantirEspaco(36f)
-            espaco(8f)
-
+            val topo = y
+            val altura = 118f
             val rect = RectF(
                 margem,
-                y - 14f,
+                topo,
                 larguraPagina - margem,
-                y + 8f
+                topo + altura
             )
 
             canvas?.drawRoundRect(
                 rect,
-                6f,
-                6f,
-                paintSecaoFundo
+                14f,
+                14f,
+                paintVerdeEscuro
+            )
+
+            canvas?.drawCircle(
+                margem + 33f,
+                topo + 34f,
+                20f,
+                paintVerde
             )
 
             canvas?.drawText(
-                texto,
-                margem + 8f,
-                y + 1f,
+                "RC",
+                margem + 33f,
+                topo + 39f,
+                paintMarca
+            )
+
+            canvas?.drawText(
+                titulo.uppercase(),
+                margem + 66f,
+                topo + 32f,
+                paintTituloPrincipal
+            )
+
+            canvas?.drawText(
+                "RuralColeta • $subtitulo",
+                margem + 66f,
+                topo + 51f,
+                paintTituloSecundario
+            )
+
+            val nome = nomeReferencia.ifBlank { "Não informado" }
+            desenharTextoLimitado(
+                texto = nome,
+                paint = paintCabecalhoNome,
+                x = margem + 18f,
+                yTexto = topo + 82f,
+                larguraMaxima = larguraConteudo - 36f
+            )
+
+            chip(
+                texto = tipo,
+                x = margem + 18f,
+                yTopo = topo + 94f
+            )
+
+            chip(
+                texto = status,
+                x = margem + 168f,
+                yTopo = topo + 94f
+            )
+
+            y += altura + 16f
+        }
+
+        fun cardResumo(
+            titulo: String,
+            conteudo: EscritorPdf.() -> Unit
+        ) {
+            garantirEspaco(130f)
+            camposDuasColunasContador = 0
+
+            val yInicio = y
+            y += 20f
+
+            canvas?.drawText(
+                titulo,
+                margem + 14f,
+                y,
                 paintSecao
             )
 
-            y += 22f
-            espaco(6f)
-        }
-
-        fun campo(
-            rotulo: String,
-            valor: String
-        ) {
-            val valorFinal = valor.ifBlank { "Não informado" }
-            garantirEspaco(32f)
-
-            val yInicial = y
-            canvas?.drawText(
-                "$rotulo:",
-                margem,
-                y,
-                paintRotulo
-            )
-
-            val xValor = margem + 150f
-            val larguraValor = larguraConteudo - 150f
-            val yFinal = desenharTextoQuebrado(
-                texto = valorFinal,
-                paint = paintTexto,
-                x = xValor,
-                larguraMaxima = larguraValor,
-                alturaLinha = 14f,
-                garantirAntesDeCadaLinha = false
-            )
-
-            y = max(yInicial + 16f, yFinal)
-        }
-
-        fun textoSecundario(texto: String) {
-            garantirEspaco(28f)
-            desenharTextoQuebrado(
-                texto = texto,
-                paint = paintTextoSecundario,
-                x = margem,
-                larguraMaxima = larguraConteudo,
-                alturaLinha = 14f,
-                garantirAntesDeCadaLinha = true
-            )
-            espaco(4f)
-        }
-
-        fun espaco(altura: Float) {
-            garantirEspaco(altura)
-            y += altura
-        }
-
-        fun linhaHorizontal() {
-            canvas?.drawLine(
-                margem,
-                y,
-                larguraPagina - margem,
-                y,
-                paintLinha
-            )
-            y += 8f
-        }
-
-        fun caixaDestaque(
-            conteudo: EscritorPdf.() -> Unit
-        ) {
-            garantirEspaco(120f)
-
-            val yInicio = y
-            val yAntes = y
-
             y += 16f
             conteudo()
-            y += 10f
+            y += 8f
 
             val rect = RectF(
                 margem,
@@ -727,101 +778,463 @@ class PdfExportService {
 
             canvas?.drawRoundRect(
                 rect,
-                8f,
-                8f,
-                paintCaixaFundo
+                10f,
+                10f,
+                paintCardDestaque
+            )
+
+            canvas?.drawRoundRect(
+                rect,
+                10f,
+                10f,
+                paintBorda
+            )
+
+            val yFim = y
+            y = yInicio + 20f
+            camposDuasColunasContador = 0
+
+            canvas?.drawText(
+                titulo,
+                margem + 14f,
+                y,
+                paintSecao
+            )
+
+            y += 16f
+            conteudo()
+            y = yFim + 12f
+        }
+
+        fun campoDuasColunas(
+            rotulo: String,
+            valor: String
+        ) {
+            val indiceNaLinha = camposDuasColunasContador % 2
+            val colunaLargura = (larguraConteudo - 28f) / 2f
+            val x = margem + 14f + (indiceNaLinha * (colunaLargura + 14f))
+
+            if (indiceNaLinha == 0) {
+                garantirEspaco(35f)
+            }
+
+            val yRotulo = y
+            canvas?.drawText(
+                rotulo.uppercase(),
+                x,
+                yRotulo,
+                paintRotulo
+            )
+
+            desenharTextoQuebradoEmPosicao(
+                texto = valor.ifBlank { "Não informado" },
+                paint = paintTexto,
+                x = x,
+                yTextoInicial = yRotulo + 14f,
+                larguraMaxima = colunaLargura,
+                alturaLinha = 12f,
+                maxLinhas = 2
+            )
+
+            camposDuasColunasContador++
+
+            if (indiceNaLinha == 1) {
+                y += 35f
+            }
+        }
+
+        private var camposDuasColunasContador = 0
+
+        fun secao(texto: String) {
+            camposDuasColunasContador = 0
+            garantirEspaco(42f)
+            y += 6f
+
+            canvas?.drawRoundRect(
+                RectF(
+                    margem,
+                    y - 10f,
+                    margem + 5f,
+                    y + 10f
+                ),
+                2f,
+                2f,
+                paintVerde
+            )
+
+            canvas?.drawText(
+                texto,
+                margem + 13f,
+                y + 4f,
+                paintSecao
+            )
+
+            y += 22f
+
+            canvas?.drawLine(
+                margem,
+                y,
+                larguraPagina - margem,
+                y,
+                paintLinha
+            )
+
+            y += 12f
+        }
+
+        fun subtituloBloco(texto: String) {
+            garantirEspaco(30f)
+            canvas?.drawText(
+                texto,
+                margem,
+                y,
+                paintSubtitulo
+            )
+            y += 16f
+        }
+
+        fun aviso(texto: String) {
+            garantirEspaco(38f)
+
+            val rect = RectF(
+                margem,
+                y - 4f,
+                larguraPagina - margem,
+                y + 28f
             )
 
             canvas?.drawRoundRect(
                 rect,
                 8f,
                 8f,
-                paintCaixaBorda
+                paintCardFundo
+            )
+
+            desenharTextoQuebrado(
+                texto = texto,
+                paint = paintAviso,
+                x = margem + 12f,
+                larguraMaxima = larguraConteudo - 24f,
+                alturaLinha = 13f,
+                garantirAntesDeCadaLinha = false
+            )
+
+            y += 8f
+        }
+
+        fun tabelaCampos(
+            conteudo: TabelaCampos.() -> Unit
+        ) {
+            val tabela = TabelaCampos()
+            tabela.conteudo()
+            tabela.linhas.forEachIndexed { index, linha ->
+                linhaTabela(
+                    rotulo = linha.rotulo,
+                    valor = linha.valor,
+                    destacar = index % 2 == 0
+                )
+            }
+            y += 8f
+        }
+
+        fun cardBenfeitoria(
+            titulo: String,
+            conteudo: TabelaCampos.() -> Unit
+        ) {
+            val tabela = TabelaCampos()
+            tabela.conteudo()
+
+            val linhasValidas = tabela.linhas.filter { linha ->
+                linha.valor.isNotBlank()
+            }
+
+            val alturaPrevista = 40f + (linhasValidas.size * 23f)
+            garantirEspaco(min(alturaPrevista, 180f))
+
+            val yInicio = y
+            y += 22f
+
+            canvas?.drawText(
+                titulo,
+                margem + 12f,
+                y,
+                paintSubtitulo
+            )
+
+            y += 14f
+
+            linhasValidas.forEachIndexed { index, linha ->
+                linhaTabelaInternaCard(
+                    rotulo = linha.rotulo,
+                    valor = linha.valor,
+                    destacar = index % 2 == 0
+                )
+            }
+
+            y += 6f
+
+            val rect = RectF(
+                margem,
+                yInicio,
+                larguraPagina - margem,
+                y
+            )
+
+            canvas?.drawRoundRect(
+                rect,
+                10f,
+                10f,
+                paintCardFundo
+            )
+
+            canvas?.drawRoundRect(
+                rect,
+                10f,
+                10f,
+                paintBorda
             )
 
             val yFim = y
-            y = yAntes + 16f
-            conteudo()
-            y = yFim + 8f
+            y = yInicio + 22f
+
+            canvas?.drawText(
+                titulo,
+                margem + 12f,
+                y,
+                paintSubtitulo
+            )
+
+            y += 14f
+
+            linhasValidas.forEachIndexed { index, linha ->
+                linhaTabelaInternaCard(
+                    rotulo = linha.rotulo,
+                    valor = linha.valor,
+                    destacar = index % 2 == 0
+                )
+            }
+
+            y = yFim + 10f
         }
 
-        fun bloco(
-            titulo: String,
-            conteudo: EscritorPdf.() -> Unit
-        ) {
-            garantirEspaco(80f)
-            subtitulo(titulo)
-            conteudo()
-            espaco(6f)
-            linhaHorizontal()
-        }
-
-        fun foto(
+        fun gradeFotos(
             context: Context,
-            caminho: String,
-            titulo: String,
-            legenda: String
+            fotos: List<FotoPdfItem>
         ) {
-            garantirEspaco(260f)
+            val larguraColuna = (larguraConteudo - 12f) / 2f
+            val alturaImagem = 145f
+            val alturaCard = 208f
 
-            subtitulo(titulo)
+            fotos.chunked(2).forEach { linhaFotos ->
+                garantirEspaco(alturaCard + 12f)
+
+                val yLinha = y
+
+                linhaFotos.forEachIndexed { index, foto ->
+                    val x = margem + (index * (larguraColuna + 12f))
+                    desenharCardFoto(
+                        context = context,
+                        foto = foto,
+                        x = x,
+                        yTopo = yLinha,
+                        largura = larguraColuna,
+                        alturaImagem = alturaImagem,
+                        alturaCard = alturaCard
+                    )
+                }
+
+                y += alturaCard + 14f
+            }
+        }
+
+        private fun desenharCardFoto(
+            context: Context,
+            foto: FotoPdfItem,
+            x: Float,
+            yTopo: Float,
+            largura: Float,
+            alturaImagem: Float,
+            alturaCard: Float
+        ) {
+            val rectCard = RectF(
+                x,
+                yTopo,
+                x + largura,
+                yTopo + alturaCard
+            )
+
+            canvas?.drawRoundRect(
+                rectCard,
+                8f,
+                8f,
+                paintCardFundo
+            )
+
+            canvas?.drawRoundRect(
+                rectCard,
+                8f,
+                8f,
+                paintBorda
+            )
 
             val bitmap = carregarBitmapReduzido(
                 context = context,
-                caminho = caminho
+                caminho = foto.caminho
             )
 
-            if (bitmap == null) {
-                textoSecundario("Foto não encontrada no caminho salvo.")
-                return
+            val rectImagem = RectF(
+                x + 8f,
+                yTopo + 8f,
+                x + largura - 8f,
+                yTopo + 8f + alturaImagem
+            )
+
+            if (bitmap != null) {
+                desenharBitmapCentralizado(
+                    bitmap = bitmap,
+                    destino = rectImagem
+                )
+                bitmap.recycle()
+            } else {
+                canvas?.drawRoundRect(
+                    rectImagem,
+                    6f,
+                    6f,
+                    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.rgb(235, 238, 236)
+                        style = Paint.Style.FILL
+                    }
+                )
+
+                desenharTextoCentralizado(
+                    texto = "Foto não encontrada",
+                    xCentro = rectImagem.centerX(),
+                    yTexto = rectImagem.centerY(),
+                    paint = paintTextoPequeno
+                )
             }
 
-            val larguraMaximaImagem = larguraConteudo
-            val alturaMaximaImagem = 230f
+            canvas?.drawText(
+                foto.titulo,
+                x + 8f,
+                yTopo + alturaImagem + 27f,
+                paintRotulo
+            )
 
-            if (y + alturaMaximaImagem + 40f > alturaPagina - margem - rodapeAltura) {
-                novaPagina()
-                subtitulo(titulo)
+            desenharTextoQuebradoEmPosicao(
+                texto = foto.legenda,
+                paint = paintTextoPequeno,
+                x = x + 8f,
+                yTextoInicial = yTopo + alturaImagem + 42f,
+                larguraMaxima = largura - 16f,
+                alturaLinha = 10.5f,
+                maxLinhas = 3
+            )
+        }
+
+        private fun linhaTabela(
+            rotulo: String,
+            valor: String,
+            destacar: Boolean
+        ) {
+            val valorFinal = valor.ifBlank { "Não informado" }
+            val alturaMinima = 25f
+            val yInicio = y
+
+            garantirEspaco(alturaMinima + 8f)
+
+            if (destacar) {
+                canvas?.drawRoundRect(
+                    RectF(
+                        margem,
+                        y - 9f,
+                        larguraPagina - margem,
+                        y + 13f
+                    ),
+                    5f,
+                    5f,
+                    paintCardFundo
+                )
             }
 
-            val escala = min(
-                larguraMaximaImagem / bitmap.width,
-                alturaMaximaImagem / bitmap.height
+            canvas?.drawText(
+                rotulo,
+                margem + 8f,
+                y + 5f,
+                paintRotulo
             )
 
-            val larguraImagem = bitmap.width * escala
-            val alturaImagem = bitmap.height * escala
-            val esquerda = margem + ((larguraConteudo - larguraImagem) / 2f)
-            val topo = y
+            val xValor = margem + 178f
+            val larguraValor = larguraConteudo - 188f
 
-            val destino = RectF(
-                esquerda,
-                topo,
-                esquerda + larguraImagem,
-                topo + alturaImagem
-            )
-
-            canvas?.drawBitmap(
-                bitmap,
-                null,
-                destino,
-                null
-            )
-
-            bitmap.recycle()
-
-            y += alturaImagem + 10f
-
-            desenharTextoQuebrado(
-                texto = legenda,
-                paint = paintTextoSecundario,
-                x = margem,
-                larguraMaxima = larguraConteudo,
+            val yDepois = desenharTextoQuebrado(
+                texto = valorFinal,
+                paint = paintTexto,
+                x = xValor,
+                larguraMaxima = larguraValor,
                 alturaLinha = 13f,
-                garantirAntesDeCadaLinha = true
+                garantirAntesDeCadaLinha = false
             )
 
-            espaco(10f)
+            y = max(yInicio + alturaMinima, yDepois + 2f)
+        }
+
+        private fun linhaTabelaInternaCard(
+            rotulo: String,
+            valor: String,
+            destacar: Boolean
+        ) {
+            val yInicio = y
+
+            if (destacar) {
+                canvas?.drawRoundRect(
+                    RectF(
+                        margem + 8f,
+                        y - 8f,
+                        larguraPagina - margem - 8f,
+                        y + 13f
+                    ),
+                    5f,
+                    5f,
+                    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.rgb(242, 246, 244)
+                        style = Paint.Style.FILL
+                    }
+                )
+            }
+
+            canvas?.drawText(
+                rotulo,
+                margem + 16f,
+                y + 5f,
+                paintRotulo
+            )
+
+            val xValor = margem + 178f
+            val larguraValor = larguraConteudo - 196f
+
+            val yDepois = desenharTextoQuebrado(
+                texto = valor.ifBlank { "Não informado" },
+                paint = paintTexto,
+                x = xValor,
+                larguraMaxima = larguraValor,
+                alturaLinha = 13f,
+                garantirAntesDeCadaLinha = false
+            )
+
+            y = max(yInicio + 22f, yDepois + 2f)
+        }
+
+        private fun desenharFundoPagina() {
+            canvas?.drawColor(branco)
+
+            canvas?.drawRect(
+                0f,
+                0f,
+                larguraPagina.toFloat(),
+                8f,
+                paintVerdeEscuro
+            )
         }
 
         private fun garantirEspaco(
@@ -837,6 +1250,35 @@ class PdfExportService {
             if (y + alturaNecessaria > limite) {
                 novaPagina()
             }
+        }
+
+        private fun desenharBitmapCentralizado(
+            bitmap: Bitmap,
+            destino: RectF
+        ) {
+            val escala = min(
+                destino.width() / bitmap.width,
+                destino.height() / bitmap.height
+            )
+
+            val larguraImagem = bitmap.width * escala
+            val alturaImagem = bitmap.height * escala
+            val esquerda = destino.left + ((destino.width() - larguraImagem) / 2f)
+            val topo = destino.top + ((destino.height() - alturaImagem) / 2f)
+
+            val destinoFinal = RectF(
+                esquerda,
+                topo,
+                esquerda + larguraImagem,
+                topo + alturaImagem
+            )
+
+            canvas?.drawBitmap(
+                bitmap,
+                null,
+                destinoFinal,
+                null
+            )
         }
 
         private fun desenharTextoQuebrado(
@@ -875,7 +1317,7 @@ class PdfExportService {
                     if (garantirAntesDeCadaLinha) {
                         garantirEspaco(alturaLinha)
                     }
-                    canvas?.drawText(linha, x, y, paint)
+                    canvas?.drawText(linha, x, y + 5f, paint)
                     y += alturaLinha
                     linha = palavra
                 }
@@ -885,11 +1327,141 @@ class PdfExportService {
                 if (garantirAntesDeCadaLinha) {
                     garantirEspaco(alturaLinha)
                 }
-                canvas?.drawText(linha, x, y, paint)
+                canvas?.drawText(linha, x, y + 5f, paint)
                 y += alturaLinha
             }
 
             return y
+        }
+
+        private fun desenharTextoQuebradoEmPosicao(
+            texto: String,
+            paint: Paint,
+            x: Float,
+            yTextoInicial: Float,
+            larguraMaxima: Float,
+            alturaLinha: Float,
+            maxLinhas: Int
+        ) {
+            val palavras = texto
+                .replace("\n", " ")
+                .split(Regex("\\s+"))
+                .filter { it.isNotBlank() }
+
+            if (palavras.isEmpty()) {
+                return
+            }
+
+            val linhas = mutableListOf<String>()
+            var linha = ""
+
+            palavras.forEach { palavra ->
+                val candidata = if (linha.isBlank()) palavra else "$linha $palavra"
+
+                if (paint.measureText(candidata) <= larguraMaxima) {
+                    linha = candidata
+                } else {
+                    linhas.add(linha)
+                    linha = palavra
+                }
+            }
+
+            if (linha.isNotBlank()) {
+                linhas.add(linha)
+            }
+
+            linhas.take(maxLinhas).forEachIndexed { index, textoLinha ->
+                val textoFinal = if (index == maxLinhas - 1 && linhas.size > maxLinhas) {
+                    "$textoLinha..."
+                } else {
+                    textoLinha
+                }
+
+                canvas?.drawText(
+                    textoFinal,
+                    x,
+                    yTextoInicial + (index * alturaLinha),
+                    paint
+                )
+            }
+        }
+
+        private fun desenharTextoLimitado(
+            texto: String,
+            paint: Paint,
+            x: Float,
+            yTexto: Float,
+            larguraMaxima: Float
+        ) {
+            var textoFinal = texto
+
+            while (paint.measureText(textoFinal) > larguraMaxima && textoFinal.length > 3) {
+                textoFinal = textoFinal.dropLast(4) + "..."
+            }
+
+            canvas?.drawText(
+                textoFinal,
+                x,
+                yTexto,
+                paint
+            )
+        }
+
+        private fun desenharTextoCentralizado(
+            texto: String,
+            xCentro: Float,
+            yTexto: Float,
+            paint: Paint
+        ) {
+            val larguraTexto = paint.measureText(texto)
+            canvas?.drawText(
+                texto,
+                xCentro - (larguraTexto / 2f),
+                yTexto,
+                paint
+            )
+        }
+
+        private fun chip(
+            texto: String,
+            x: Float,
+            yTopo: Float
+        ) {
+            val largura = 132f
+            val altura = 18f
+
+            val rect = RectF(
+                x,
+                yTopo,
+                x + largura,
+                yTopo + altura
+            )
+
+            val paintChip = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.rgb(232, 245, 238)
+                style = Paint.Style.FILL
+            }
+
+            val paintChipTexto = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = verdeEscuro
+                textSize = 8.8f
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            }
+
+            canvas?.drawRoundRect(
+                rect,
+                9f,
+                9f,
+                paintChip
+            )
+
+            desenharTextoLimitado(
+                texto = texto,
+                paint = paintChipTexto,
+                x = x + 8f,
+                yTexto = yTopo + 12.5f,
+                larguraMaxima = largura - 16f
+            )
         }
 
         private fun fecharPaginaAtual() {
@@ -907,26 +1479,27 @@ class PdfExportService {
             canvasAtual: Canvas
         ) {
             val paintRodape = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.rgb(120, 120, 120)
-                textSize = 9f
+                color = Color.rgb(110, 110, 110)
+                textSize = 8.6f
             }
 
-            val textoEsquerda = "RuralColeta"
+            val yLinha = alturaPagina - 44f
+            val yTexto = alturaPagina - 25f
+            val textoEsquerda = "RuralColeta • Relatório gerado em $dataGeracao"
             val textoDireita = "Página $numeroPagina"
-            val yRodape = alturaPagina - 24f
 
             canvasAtual.drawLine(
                 margem,
-                alturaPagina - 42f,
+                yLinha,
                 larguraPagina - margem,
-                alturaPagina - 42f,
+                yLinha,
                 paintLinha
             )
 
             canvasAtual.drawText(
                 textoEsquerda,
                 margem,
-                yRodape,
+                yTexto,
                 paintRodape
             )
 
@@ -935,9 +1508,30 @@ class PdfExportService {
             canvasAtual.drawText(
                 textoDireita,
                 larguraPagina - margem - larguraTextoDireita,
-                yRodape,
+                yTexto,
                 paintRodape
             )
         }
     }
+
+    private class TabelaCampos {
+        val linhas = mutableListOf<LinhaTabela>()
+
+        fun linha(
+            rotulo: String,
+            valor: String
+        ) {
+            linhas.add(
+                LinhaTabela(
+                    rotulo = rotulo,
+                    valor = valor
+                )
+            )
+        }
+    }
+
+    private data class LinhaTabela(
+        val rotulo: String,
+        val valor: String
+    )
 }

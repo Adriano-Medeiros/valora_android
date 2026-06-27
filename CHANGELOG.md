@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.7.1 - Melhorias visuais do relatório PDF
+
+### Melhorado
+
+- Melhorado o cabeçalho visual do relatório PDF.
+- Melhorada a apresentação do resumo inicial da coleta.
+- Melhorada a organização das seções do relatório.
+- Melhorada a apresentação dos dados gerais em formato de tabela.
+- Melhorada a apresentação das variáveis respondidas.
+- Melhorada a apresentação das benfeitorias em cards.
+- Melhorada a organização das fotos em grade de duas colunas.
+- Melhorado o rodapé com data de geração e paginação.
+- Melhorado o espaçamento geral do documento.
+- Melhorada a aparência profissional do PDF gerado.
+
+### Técnico
+
+- Atualizado `PdfExportService`.
+- Mantida a arquitetura centralizada de exportação criada na v0.6.0.
+- Mantido o fluxo de PDF criado na v0.7.0.
+- Atualizado `versionCode` para 8.
+- Atualizado `versionName` para 0.7.1.
+
+---
+
+---
+
 ## v0.7.0 - Relatório PDF da coleta
 
 ### Adicionado
