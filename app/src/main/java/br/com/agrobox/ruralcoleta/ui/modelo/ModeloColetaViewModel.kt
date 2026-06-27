@@ -63,16 +63,15 @@ class ModeloColetaViewModel(
                 return@launch
             }
 
-            val idsSelecionados = modeloRepository
+            val idsSelecionadosOrdenados = modeloRepository
                 .listarIdsVariaveisDoModelo(id)
-                .toSet()
 
             _uiState.value = _uiState.value.copy(
                 modeloId = modelo.id,
                 nome = modelo.nome,
                 descricao = modelo.descricao.orEmpty(),
                 ativo = modelo.ativo,
-                variaveisSelecionadas = idsSelecionados,
+                variaveisSelecionadas = idsSelecionadosOrdenados,
                 carregando = false,
                 mensagemErro = null
             )
@@ -87,15 +86,19 @@ class ModeloColetaViewModel(
     }
 
     fun alterarDescricao(descricao: String) {
-        _uiState.value = _uiState.value.copy(descricao = descricao)
+        _uiState.value = _uiState.value.copy(
+            descricao = descricao
+        )
     }
 
     fun alterarAtivo(ativo: Boolean) {
-        _uiState.value = _uiState.value.copy(ativo = ativo)
+        _uiState.value = _uiState.value.copy(
+            ativo = ativo
+        )
     }
 
     fun alternarVariavelSelecionada(variavelId: Long) {
-        val selecionadas = _uiState.value.variaveisSelecionadas.toMutableSet()
+        val selecionadas = _uiState.value.variaveisSelecionadas.toMutableList()
 
         if (selecionadas.contains(variavelId)) {
             selecionadas.remove(variavelId)
@@ -108,6 +111,36 @@ class ModeloColetaViewModel(
         )
     }
 
+    fun moverVariavelParaCima(variavelId: Long) {
+        val selecionadas = _uiState.value.variaveisSelecionadas.toMutableList()
+        val index = selecionadas.indexOf(variavelId)
+
+        if (index > 0) {
+            val anterior = selecionadas[index - 1]
+            selecionadas[index - 1] = variavelId
+            selecionadas[index] = anterior
+
+            _uiState.value = _uiState.value.copy(
+                variaveisSelecionadas = selecionadas
+            )
+        }
+    }
+
+    fun moverVariavelParaBaixo(variavelId: Long) {
+        val selecionadas = _uiState.value.variaveisSelecionadas.toMutableList()
+        val index = selecionadas.indexOf(variavelId)
+
+        if (index >= 0 && index < selecionadas.lastIndex) {
+            val proxima = selecionadas[index + 1]
+            selecionadas[index + 1] = variavelId
+            selecionadas[index] = proxima
+
+            _uiState.value = _uiState.value.copy(
+                variaveisSelecionadas = selecionadas
+            )
+        }
+    }
+
     fun salvarModelo(
         onSuccess: () -> Unit
     ) {
@@ -116,6 +149,13 @@ class ModeloColetaViewModel(
         if (state.nome.isBlank()) {
             _uiState.value = state.copy(
                 mensagemErro = "Informe o nome do formulário."
+            )
+            return
+        }
+
+        if (state.variaveisSelecionadas.isEmpty()) {
+            _uiState.value = state.copy(
+                mensagemErro = "Selecione pelo menos uma variável para o formulário."
             )
             return
         }
@@ -142,10 +182,10 @@ class ModeloColetaViewModel(
 
             modeloRepository.salvarVariaveisDoModelo(
                 modeloColetaId = modeloIdSalvo,
-                variaveisIds = state.variaveisSelecionadas.toList()
+                variaveisIds = state.variaveisSelecionadas
             )
 
-            _uiState.value = state.copy(
+            _uiState.value = _uiState.value.copy(
                 salvando = false
             )
 

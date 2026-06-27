@@ -12,7 +12,7 @@ data class ModeloColetaUiState(
     val descricao: String = "",
     val ativo: Boolean = true,
 
-    val variaveisSelecionadas: Set<Long> = emptySet(),
+    val variaveisSelecionadas: List<Long> = emptyList(),
 
     val carregando: Boolean = false,
     val salvando: Boolean = false,

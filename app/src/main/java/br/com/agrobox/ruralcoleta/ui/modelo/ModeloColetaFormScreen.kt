@@ -21,11 +21,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DynamicForm
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -59,6 +62,11 @@ fun ModeloColetaFormScreen(
     } else {
         "Novo formulário"
     }
+
+    val variaveisOrdenadasParaExibicao = ordenarVariaveisParaExibicao(
+        variaveis = uiState.variaveis,
+        selecionadas = uiState.variaveisSelecionadas
+    )
 
     Scaffold(
         containerColor = fundo,
@@ -210,19 +218,37 @@ fun ModeloColetaFormScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Marque as variáveis que farão parte deste formulário.",
+                        text = "Marque as variáveis na ordem desejada. A numeração indica a ordem em que elas aparecerão na coleta.",
                         color = Color.Gray,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
 
-            items(uiState.variaveis) { variavel ->
+            items(
+                items = variaveisOrdenadasParaExibicao,
+                key = { variavel ->
+                    variavel.id
+                }
+            ) { variavel ->
+
+                val ordem = uiState.variaveisSelecionadas.indexOf(variavel.id) + 1
+                val selecionada = ordem > 0
+
                 VariavelSelecionavelItem(
                     variavel = variavel,
-                    selecionada = uiState.variaveisSelecionadas.contains(variavel.id),
+                    selecionada = selecionada,
+                    ordem = if (selecionada) ordem else null,
+                    podeSubir = ordem > 1,
+                    podeDescer = selecionada && ordem < uiState.variaveisSelecionadas.size,
                     onClick = {
                         viewModel.alternarVariavelSelecionada(variavel.id)
+                    },
+                    onSubirClick = {
+                        viewModel.moverVariavelParaCima(variavel.id)
+                    },
+                    onDescerClick = {
+                        viewModel.moverVariavelParaBaixo(variavel.id)
                     }
                 )
             }
@@ -234,13 +260,24 @@ fun ModeloColetaFormScreen(
 private fun VariavelSelecionavelItem(
     variavel: VariavelEntity,
     selecionada: Boolean,
-    onClick: () -> Unit
+    ordem: Int?,
+    podeSubir: Boolean,
+    podeDescer: Boolean,
+    onClick: () -> Unit,
+    onSubirClick: () -> Unit,
+    onDescerClick: () -> Unit
 ) {
+    val verde = Color(0xFF00823B)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = if (selecionada) {
+                Color(0xFFEAF6EF)
+            } else {
+                Color.White
+            }
         ),
         onClick = onClick
     ) {
@@ -259,6 +296,26 @@ private fun VariavelSelecionavelItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
+            if (ordem != null) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .background(
+                            color = verde,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = ordem.toString(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+            }
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -272,7 +329,67 @@ private fun VariavelSelecionavelItem(
                     color = Color.Gray,
                     style = MaterialTheme.typography.bodySmall
                 )
+
+                if (selecionada) {
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = "Ordem no formulário: $ordem",
+                        color = verde,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            if (selecionada) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    IconButton(
+                        onClick = onSubirClick,
+                        enabled = podeSubir
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = "Subir variável",
+                            tint = if (podeSubir) verde else Color.LightGray
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDescerClick,
+                        enabled = podeDescer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Descer variável",
+                            tint = if (podeDescer) verde else Color.LightGray
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+private fun ordenarVariaveisParaExibicao(
+    variaveis: List<VariavelEntity>,
+    selecionadas: List<Long>
+): List<VariavelEntity> {
+    val mapaOrdem = selecionadas
+        .mapIndexed { index, id ->
+            id to index
+        }
+        .toMap()
+
+    return variaveis.sortedWith(
+        compareBy<VariavelEntity> { variavel ->
+            !selecionadas.contains(variavel.id)
+        }.thenBy { variavel ->
+            mapaOrdem[variavel.id] ?: Int.MAX_VALUE
+        }.thenBy { variavel ->
+            variavel.nome
+        }
+    )
 }

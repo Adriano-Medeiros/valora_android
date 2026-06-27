@@ -1,6 +1,24 @@
-feat: adiciona edicao de grupos variaveis e formularios
-
 # Changelog
+
+## v0.5.0 - Ordenação de variáveis no formulário
+
+### Adicionado
+- Adicionada ordenação das variáveis na criação e edição do formulário de pesquisa.
+- Adicionada numeração visual das variáveis selecionadas.
+- Adicionados botões para mover variável para cima e para baixo.
+- Mantida a ordem de seleção das variáveis no formulário.
+
+### Melhorado
+- Melhorada a tela de criação/edição de formulário.
+- Melhorada a organização das variáveis no formulário dinâmico.
+
+### Técnico
+- Atualizado versionCode para 5.
+- Atualizado versionName para 0.5.0.
+- A ordenação usa o campo `ordem` já existente em `ModeloColetaVariavelEntity`.
+- Não requer migration do Room.
+
+---
 
 ## v0.4.0 - Edição de cadastros estruturais
 

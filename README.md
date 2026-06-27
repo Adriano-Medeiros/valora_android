@@ -9,8 +9,8 @@ O RuralColeta permite cadastrar grupos, variáveis e formulários personalizados
 ## Versão atual
 
 ```kotlin
-versionCode = 4
-versionName = "0.4.0"
+versionCode = 5
+versionName = "0.5.0"
 ```
 
 ---
@@ -55,7 +55,9 @@ O aplicativo não realiza a avaliação do imóvel nem calcula o valor de mercad
 * Tutorial guiado de primeiro acesso.
 * Botão para visualizar novamente o tutorial.
 * Exibição da versão do app na Splash Screen.
-
+* Ordenação das variáveis dentro do formulário de pesquisa.
+* Numeração visual das variáveis selecionadas.
+* Reordenação das variáveis com botões de subir e descer.
 ---
 
 ## Fluxo básico de uso
@@ -367,26 +369,14 @@ C:\Program Files\Android\Android Studio\jbr
 
 ## Status atual
 
-Versão atual:
-
-```text
-v0.4.0
-```
+Versão atual: v0.5.0
 
 Esta versão inclui:
-
-* Edição de grupos de variáveis.
-* Edição de variáveis.
-* Edição de formulários de pesquisa.
+* Ordenação das variáveis no formulário de pesquisa.
+* Edição de grupos, variáveis e formulários.
 * Mapa estável com OSMDroid.
-* Correção de travamento ao voltar do mapa.
-* BottomSheet com detalhes da coleta.
-* Campos inteligentes com teclado adequado.
-* Campo data com DatePicker.
+* Campos inteligentes e DatePicker.
 * Tutorial guiado de primeiro acesso.
-* Botão para visualizar o tutorial novamente.
-* Exibição da versão na Splash Screen.
-
 ---
 
 ## Próximas melhorias previstas
