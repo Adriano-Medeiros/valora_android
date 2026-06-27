@@ -20,15 +20,6 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 
-# Git
-*.gitignore text eol=lf
-*.gitattributes text eol=lf
-
-# Scripts
-*.sh text eol=lf
-*.bat text eol=crlf
-*.cmd text eol=crlf
-
 # Imagens
 *.png binary
 *.jpg binary
