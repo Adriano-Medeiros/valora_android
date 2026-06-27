@@ -1,3 +1,4 @@
+
 # RuralColeta
 
 Aplicativo Android para coleta de dados de imóveis rurais em campo, com foco em avaliações rurais pelo método comparativo direto de dados de mercado.
