@@ -1,4 +1,41 @@
 # Changelog
+## v0.8.1 - Melhorias em fotos, legendas e observações
+
+### Adicionado
+
+- Adicionado campo de observação para fotos gerais da coleta.
+- Adicionado campo de observação para fotos das benfeitorias.
+- Adicionada edição posterior da legenda das fotos gerais.
+- Adicionada edição posterior da observação das fotos gerais.
+- Adicionada edição posterior da legenda das fotos das benfeitorias.
+- Adicionada edição posterior da observação das fotos das benfeitorias.
+- Adicionado componente reutilizável `FotoDescricaoDialog` para edição dos dados das fotos.
+- Adicionada migration do Room para incluir o campo `observacao` nas tabelas de fotos.
+
+### Melhorado
+
+- Melhorada a tela de fotos gerais com campo de observação antes da captura.
+- Melhorada a tela de fotos das benfeitorias com campo de observação antes da captura.
+- Melhorada a apresentação dos cards de fotos com legenda e observação.
+- Melhorada a organização dos dados descritivos das fotos para uso em relatórios e exportações futuras.
+- Melhorada a segurança da evolução do banco, evitando perda de dados na atualização da versão atual.
+
+### Técnico
+
+- Atualizada `FotoColetaEntity` com o campo `observacao`.
+- Atualizada `FotoBenfeitoriaEntity` com o campo `observacao`.
+- Criada `DatabaseMigrations.MIGRATION_5_6`.
+- Atualizado `AppDatabase` para versão 6 do banco Room.
+- Atualizado `DatabaseProvider` para usar migration 5 para 6.
+- Atualizado `FotoBenfeitoriaRepository` com método `atualizar`.
+- Atualizado `FotosColetaViewModel`.
+- Atualizado `FotosBenfeitoriaViewModel`.
+- Atualizada `FotosColetaScreen`.
+- Atualizada `FotosBenfeitoriaScreen`.
+- Atualizado `versionCode` para 11.
+- Atualizado `versionName` para 0.8.1.
+
+---
 
 ## v0.8.0 - Backup e restauração dos dados
 
