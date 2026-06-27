@@ -5,6 +5,8 @@ import androidx.room.Room
 
 object DatabaseProvider {
 
+    const val DATABASE_NAME = "rural_coleta_db"
+
     @Volatile
     private var INSTANCE: AppDatabase? = null
 
@@ -13,13 +15,20 @@ object DatabaseProvider {
             val instance = Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
-                "rural_coleta_db"
+                DATABASE_NAME
             )
                 .fallbackToDestructiveMigration(true)
                 .build()
 
             INSTANCE = instance
             instance
+        }
+    }
+
+    fun closeDatabase() {
+        synchronized(this) {
+            INSTANCE?.close()
+            INSTANCE = null
         }
     }
 }

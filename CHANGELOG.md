@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.8.0 - Backup e restauração dos dados
+
+### Adicionado
+
+- Adicionado recurso de backup completo dos dados locais do aplicativo.
+- Adicionado recurso de restauração de backup a partir de arquivo ZIP.
+- Adicionado `BackupService` para gerar e restaurar backups.
+- Adicionado `BackupViewModel` para controlar o fluxo de backup e restauração.
+- Adicionado `BackupCard` na tela de Preferências.
+- Adicionada inclusão do banco Room no backup.
+- Adicionada inclusão das fotos e arquivos internos no backup.
+- Adicionada inclusão dos arquivos externos do aplicativo no backup.
+- Adicionada inclusão das preferências locais no backup.
+- Adicionada validação do arquivo `metadata.json` antes da restauração.
+- Adicionada confirmação antes de substituir os dados atuais durante a restauração.
+
+### Melhorado
+
+- Melhorada a segurança dos dados coletados em campo.
+- Melhorada a possibilidade de transferência dos dados para outro dispositivo.
+- Melhorada a proteção contra perda de dados após reinstalação do aplicativo.
+- Melhorada a preparação para futura sincronização com o Valora Web.
+
+### Técnico
+
+- Atualizado `DatabaseProvider` com `DATABASE_NAME` centralizado.
+- Adicionado método `closeDatabase()` ao `DatabaseProvider` para permitir restauração segura.
+- Adicionado checkpoint do banco antes da geração do backup.
+- Adicionada extração segura de ZIP para evitar caminhos inválidos dentro do backup.
+- Atualizado `versionCode` para 10.
+- Atualizado `versionName` para 0.8.0.
+
+---
+
 ## v0.7.2 - Logomarca no cabeçalho do relatório PDF
 
 ### Melhorado

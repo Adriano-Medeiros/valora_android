@@ -8,32 +8,53 @@ O RuralColeta permite cadastrar formulários de pesquisa, registrar imóveis ava
 
 ## Status atual
 
-Versão atual: `v0.7.2`
+Versão atual: `v0.8.0`
 
 ```kotlin
-versionCode = 9
-versionName = "0.7.2"
+versionCode = 10
+versionName = "0.8.0"
 ```
 
 Esta versão inclui:
 
-* Relatório PDF com logomarca do RuralColeta no cabeçalho.
-* Relatório PDF com layout visual melhorado.
-* Exportação individual pela tela de detalhe da coleta.
-* Exportação em lote pela tela de exportação.
-* Exportação em Excel.
-* Exportação em pacote completo ZIP.
-* Inclusão do PDF dentro do pacote ZIP.
-* Estrutura ZIP organizada com Excel, PDF, fotos gerais e fotos de benfeitorias.
-* Módulo centralizado de exportação com `ExportacaoUseCase`.
-* Diálogo reutilizável para escolha do tipo de exportação.
-* Ordenação das variáveis no formulário de pesquisa.
-* Edição de grupos, variáveis e formulários.
-* Mapa estável com OSMDroid.
-* Campos inteligentes com teclado adequado por tipo de dado.
-* Campo de data com DatePicker.
-* Tutorial guiado de primeiro acesso.
-* Exibição da versão do aplicativo na Splash Screen.
+- Backup completo dos dados locais do aplicativo.
+- Restauração de backup a partir de arquivo ZIP.
+- Inclusão do banco Room no backup.
+- Inclusão das fotos e arquivos do aplicativo no backup.
+- Inclusão das preferências locais no backup.
+- Confirmação antes da restauração dos dados.
+- Validação do arquivo de backup antes da restauração.
+- Relatório PDF com logomarca do RuralColeta no cabeçalho.
+- Exportação em Excel, PDF e pacote completo ZIP.
+
+## Backup e restauração
+
+O RuralColeta possui recurso de backup completo dos dados locais do aplicativo.
+
+O backup gera um arquivo ZIP contendo:
+
+- Banco de dados Room.
+- Arquivos internos do aplicativo.
+- Fotos e arquivos externos do aplicativo.
+- Preferências locais.
+- Arquivo `metadata.json` com informações da versão e validação do backup.
+
+Exemplo de estrutura:
+
+```text
+RuralColeta_Backup_2026-06-27_153000.zip
+│
+├── metadata.json
+├── databases
+│   ├── rural_coleta_db
+│   ├── rural_coleta_db-wal
+│   └── rural_coleta_db-shm
+├── files
+├── external_files
+└── shared_prefs
+```
+
+A restauração substitui os dados atuais do aplicativo pelos dados existentes no backup selecionado. Após restaurar, o usuário deve fechar e abrir o aplicativo novamente.
 
 ---
 
