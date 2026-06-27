@@ -369,14 +369,55 @@ C:\Program Files\Android\Android Studio\jbr
 
 ## Status atual
 
-Versão atual: v0.5.0
+Versão atual: `v0.6.0`
 
 Esta versão inclui:
+
+* Refatoração completa do módulo de exportação.
+* Exportação individual pela tela de detalhe da coleta.
+* Exportação em lote pela tela de exportação.
+* Exportação em Excel.
+* Exportação de pacote completo ZIP.
+* Estrutura ZIP organizada com:
+
+  * `Dados_Coleta.xlsx`
+  * `Fotos_Gerais`
+  * `Benfeitorias`
+* Módulo centralizado de exportação com `ExportacaoUseCase`.
+* Diálogo reutilizável para escolha do tipo de exportação.
+* Preparação para futura exportação em PDF.
 * Ordenação das variáveis no formulário de pesquisa.
 * Edição de grupos, variáveis e formulários.
 * Mapa estável com OSMDroid.
 * Campos inteligentes e DatePicker.
 * Tutorial guiado de primeiro acesso.
+
+## Exportação
+
+O RuralColeta possui um módulo centralizado de exportação, utilizado tanto pela tela de detalhe da coleta quanto pela tela de exportação em lote.
+
+Tipos disponíveis:
+
+* Excel.
+* Pacote completo ZIP.
+* PDF, previsto para versão futura.
+
+Estrutura do pacote ZIP:
+
+```text
+RuralColeta_2026-06-27_145530.zip
+│
+├── Dados_Coleta.xlsx
+├── Fotos_Gerais
+│
+└── Benfeitorias
+    ├── Casa
+    ├── Curral
+    └── Cerca
+```
+
+Quando várias coletas são exportadas juntas, o ZIP organiza cada coleta em sua própria pasta.
+
 ---
 
 ## Próximas melhorias previstas

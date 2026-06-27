@@ -39,9 +39,15 @@ import java.util.Date
 import java.util.Locale
 import br.com.agrobox.ruralcoleta.data.local.entity.BenfeitoriaComFotos
 import br.com.agrobox.ruralcoleta.data.local.entity.FotoBenfeitoriaEntity
+import androidx.compose.ui.platform.LocalContext
+import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoDialog
+import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoViewModel
+import br.com.agrobox.ruralcoleta.util.ShareHelper
+
 @Composable
 fun DetalheColetaScreen(
     viewModel: DetalheColetaViewModel,
+    exportacaoViewModel: ExportacaoViewModel,
     onBackClick: () -> Unit,
     onDeleteSuccess: () -> Unit,
     onContinueOrEditClick: (Long) -> Unit
@@ -57,6 +63,41 @@ fun DetalheColetaScreen(
     val verdeEscuro = Color(0xFF003B24)
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
+
+    val context = LocalContext.current
+    val exportacaoState by exportacaoViewModel.uiState.collectAsState()
+
+    val mostrarDialogExportacao = remember {
+        mutableStateOf(false)
+    }
+
+    if (mostrarDialogExportacao.value && coleta != null) {
+        ExportacaoDialog(
+            totalColetas = 1,
+            uiState = exportacaoState,
+            onDismiss = {
+                exportacaoViewModel.limparErro()
+                mostrarDialogExportacao.value = false
+            },
+            onExportarClick = { tipo ->
+                exportacaoViewModel.exportar(
+                    context = context,
+                    tipo = tipo,
+                    coletasIds = listOf(coleta.id),
+                    onSuccess = { resultado ->
+                        mostrarDialogExportacao.value = false
+
+                        ShareHelper.compartilharArquivo(
+                            context = context,
+                            file = resultado.arquivo,
+                            mimeType = resultado.mimeType,
+                            titulo = resultado.tituloCompartilhamento
+                        )
+                    }
+                )
+            }
+        )
+    }
 
     if (mostrarDialogExcluir.value) {
         ConfirmDeleteDialog(
@@ -171,6 +212,41 @@ fun DetalheColetaScreen(
                             } else {
                                 "Editar coleta"
                             }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            exportacaoViewModel.limparErro()
+                            mostrarDialogExportacao.value = true
+                        },
+                        enabled = !exportacaoState.exportando,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF003B24)
+                        )
+                    ) {
+                        Text(
+                            text = if (exportacaoState.exportando) {
+                                "Exportando..."
+                            } else {
+                                "Exportar coleta"
+                            }
+                        )
+                    }
+
+                    exportacaoState.mensagemErro?.let { mensagem ->
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = mensagem,
+                            color = Color(0xFFD32F2F),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

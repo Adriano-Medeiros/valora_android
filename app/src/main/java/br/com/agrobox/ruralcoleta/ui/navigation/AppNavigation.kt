@@ -69,6 +69,8 @@ import br.com.agrobox.ruralcoleta.ui.dashboard.DashboardViewModelFactory
 import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoColetasScreen
 import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoColetasViewModel
 import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoColetasViewModelFactory
+import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoViewModel
+import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoViewModelFactory
 import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoModelosScreen
 import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoModelosViewModel
 import br.com.agrobox.ruralcoleta.ui.exportacao.ExportacaoModelosViewModelFactory
@@ -913,6 +915,12 @@ fun AppNavigation(
                 val exportacaoColetasViewModel: ExportacaoColetasViewModel = viewModel(
                     factory = ExportacaoColetasViewModelFactory(
                         modeloId = modeloId,
+                        coletaRepository = coletaRepository
+                    )
+                )
+
+                val exportacaoViewModel: ExportacaoViewModel = viewModel(
+                    factory = ExportacaoViewModelFactory(
                         coletaRepository = coletaRepository,
                         modeloColetaRepository = modeloColetaRepository,
                         respostaColetaRepository = respostaColetaRepository,
@@ -924,11 +932,9 @@ fun AppNavigation(
 
                 ExportacaoColetasScreen(
                     viewModel = exportacaoColetasViewModel,
+                    exportacaoViewModel = exportacaoViewModel,
                     onBackClick = {
                         navController.popBackStack()
-                    },
-                    onExportarClick = { coletasIds ->
-                        // Próximo passo: gerar Excel com essas coletas
                     }
                 )
             }
@@ -954,8 +960,20 @@ fun AppNavigation(
                     )
                 )
 
+                val exportacaoViewModel: ExportacaoViewModel = viewModel(
+                    factory = ExportacaoViewModelFactory(
+                        coletaRepository = coletaRepository,
+                        modeloColetaRepository = modeloColetaRepository,
+                        respostaColetaRepository = respostaColetaRepository,
+                        fotoColetaRepository = fotoColetaRepository,
+                        benfeitoriaRepository = benfeitoriaRepository,
+                        fotoBenfeitoriaRepository = fotoBenfeitoriaRepository
+                    )
+                )
+
                 DetalheColetaScreen(
                     viewModel = detalheViewModel,
+                    exportacaoViewModel = exportacaoViewModel,
                     onBackClick = {
                         navController.popBackStack()
                     },

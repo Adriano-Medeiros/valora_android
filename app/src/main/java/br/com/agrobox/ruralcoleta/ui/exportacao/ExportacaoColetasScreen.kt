@@ -37,26 +37,35 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.data.local.entity.ColetaEntity
 import br.com.agrobox.ruralcoleta.data.local.entity.TipoColeta
+import br.com.agrobox.ruralcoleta.util.ShareHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ExportacaoColetasScreen(
     viewModel: ExportacaoColetasViewModel,
-    onBackClick: () -> Unit,
-    onExportarClick: (List<Long>) -> Unit
+    exportacaoViewModel: ExportacaoViewModel,
+    onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val exportacaoState by exportacaoViewModel.uiState.collectAsState()
+
     val context = LocalContext.current
+
+    val mostrarDialogExportacao = remember {
+        mutableStateOf(false)
+    }
 
     val verdeEscuro = Color(0xFF003B24)
     val verde = Color(0xFF00823B)
@@ -64,6 +73,34 @@ fun ExportacaoColetasScreen(
 
     val todasSelecionadas = uiState.coletas.isNotEmpty() &&
             uiState.selecionadas.size == uiState.coletas.size
+
+    if (mostrarDialogExportacao.value) {
+        ExportacaoDialog(
+            totalColetas = uiState.selecionadas.size,
+            uiState = exportacaoState,
+            onDismiss = {
+                exportacaoViewModel.limparErro()
+                mostrarDialogExportacao.value = false
+            },
+            onExportarClick = { tipo ->
+                exportacaoViewModel.exportar(
+                    context = context,
+                    tipo = tipo,
+                    coletasIds = uiState.selecionadas.toList(),
+                    onSuccess = { resultado ->
+                        mostrarDialogExportacao.value = false
+
+                        ShareHelper.compartilharArquivo(
+                            context = context,
+                            file = resultado.arquivo,
+                            mimeType = resultado.mimeType,
+                            titulo = resultado.tituloCompartilhamento
+                        )
+                    }
+                )
+            }
+        )
+    }
 
     Scaffold(
         containerColor = fundo,
@@ -124,7 +161,7 @@ fun ExportacaoColetasScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Cada coleta selecionada será uma linha na planilha.",
+                text = "As coletas selecionadas poderão ser exportadas em Excel ou ZIP completo.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -214,11 +251,34 @@ fun ExportacaoColetasScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            uiState.mensagemErro?.let { mensagem ->
+                Text(
+                    text = mensagem,
+                    color = Color(0xFFD32F2F),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            exportacaoState.mensagemErro?.let { mensagem ->
+                Text(
+                    text = mensagem,
+                    color = Color(0xFFD32F2F),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             Button(
                 onClick = {
-                    viewModel.exportarExcel(context)
+                    if (viewModel.validarSelecao()) {
+                        exportacaoViewModel.limparErro()
+                        mostrarDialogExportacao.value = true
+                    }
                 },
-                enabled = uiState.selecionadas.isNotEmpty(),
+                enabled = !exportacaoState.exportando,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -235,7 +295,11 @@ fun ExportacaoColetasScreen(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Exportar ${uiState.selecionadas.size} coleta(s)"
+                    text = if (exportacaoState.exportando) {
+                        "Exportando..."
+                    } else {
+                        "Exportar selecionadas"
+                    }
                 )
             }
         }

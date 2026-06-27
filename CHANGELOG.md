@@ -1,5 +1,46 @@
 # Changelog
 
+## v0.6.0 - Refatoração do módulo de exportação
+
+### Adicionado
+
+- Adicionado módulo centralizado de exportação.
+- Adicionado `ExportacaoUseCase` para concentrar a lógica de exportação.
+- Adicionado `ExportacaoDialog` reutilizável.
+- Adicionado `ExportacaoViewModel` compartilhado entre telas.
+- Adicionado suporte para exportação individual pela tela de detalhe da coleta.
+- Adicionado suporte para exportação em lote pela tela de exportação.
+- Adicionado serviço de exportação ZIP.
+- Adicionada estrutura de pacote completo ZIP com:
+
+  - `Dados_Coleta.xlsx`
+  - `Fotos_Gerais`
+  - `Benfeitorias`
+- Adicionada preparação estrutural para exportação futura em PDF.
+
+### Melhorado
+
+- Refatorada a exportação para evitar duplicação de código.
+- Melhorada a integração entre exportação Excel e ZIP.
+- Melhorado o compartilhamento de arquivos exportados.
+- Melhorada a organização dos arquivos exportados.
+- Melhorada a tela de detalhe da coleta com opção de exportação.
+- Melhorada a tela de exportação em lote com uso do mesmo fluxo de exportação.
+
+### Técnico
+
+- Criada camada `domain/exportacao`.
+- Movida a lógica de exportação para serviços especializados.
+- Centralizado o uso de `ShareHelper`.
+- Corrigido uso do `FileProvider` para compartilhamento de arquivos.
+- Atualizado `versionCode` para 6.
+- Atualizado `versionName` para 0.6.0.
+
+### Observação
+
+- O relatório PDF ainda não foi implementado; a estrutura foi preparada para inclusão futura.
+
+
 ## v0.5.0 - Ordenação de variáveis no formulário
 
 ### Adicionado
