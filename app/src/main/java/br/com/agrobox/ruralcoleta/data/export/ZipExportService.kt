@@ -20,7 +20,8 @@ class ZipExportService {
     fun exportarZipCompleto(
         context: Context,
         dados: DadosExportacao,
-        excelExportService: ExcelExportService
+        excelExportService: ExcelExportService,
+        pdfExportService: PdfExportService
     ): File {
         val dataHora = SimpleDateFormat(
             "yyyy-MM-dd_HHmmss",
@@ -63,6 +64,23 @@ class ZipExportService {
             target = File(
                 pastaTemporaria,
                 "Dados_Coleta.xlsx"
+            ),
+            overwrite = true
+        )
+
+        val arquivoPdf = pdfExportService.exportarRelatorioPdf(
+            context = context,
+            dados = dados
+        )
+
+        arquivoPdf.copyTo(
+            target = File(
+                pastaTemporaria,
+                if (dados.coletas.size == 1) {
+                    "Relatorio_Coleta.pdf"
+                } else {
+                    "Relatorio_Coletas.pdf"
+                }
             ),
             overwrite = true
         )

@@ -94,11 +94,13 @@ fun ExportacaoDialog(
 
                 OpcaoExportacaoItem(
                     titulo = "Relatório PDF",
-                    descricao = "Será implementado em uma próxima versão.",
+                    descricao = "Relatório com dados gerais, respostas, benfeitorias e fotos.",
                     tipo = TipoExportacao.PDF,
-                    selecionado = false,
-                    habilitado = false,
-                    onClick = {}
+                    selecionado = tipoSelecionado.value == TipoExportacao.PDF,
+                    habilitado = !uiState.exportando,
+                    onClick = {
+                        tipoSelecionado.value = TipoExportacao.PDF
+                    }
                 )
 
                 uiState.mensagemErro?.let { mensagem ->

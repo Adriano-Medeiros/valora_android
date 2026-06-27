@@ -2,6 +2,7 @@ package br.com.agrobox.ruralcoleta.domain.exportacao
 
 import android.content.Context
 import br.com.agrobox.ruralcoleta.data.export.ExcelExportService
+import br.com.agrobox.ruralcoleta.data.export.PdfExportService
 import br.com.agrobox.ruralcoleta.data.export.ZipExportService
 import br.com.agrobox.ruralcoleta.data.repository.BenfeitoriaRepository
 import br.com.agrobox.ruralcoleta.data.repository.ColetaRepository
@@ -21,7 +22,8 @@ class ExportacaoUseCase(
     private val benfeitoriaRepository: BenfeitoriaRepository,
     private val fotoBenfeitoriaRepository: FotoBenfeitoriaRepository,
     private val excelExportService: ExcelExportService = ExcelExportService(),
-    private val zipExportService: ZipExportService = ZipExportService()
+    private val zipExportService: ZipExportService = ZipExportService(),
+    private val pdfExportService: PdfExportService = PdfExportService()
 ) {
 
     suspend fun exportar(
@@ -61,7 +63,8 @@ class ExportacaoUseCase(
                 val arquivo = zipExportService.exportarZipCompleto(
                     context = context,
                     dados = dados,
-                    excelExportService = excelExportService
+                    excelExportService = excelExportService,
+                    pdfExportService = pdfExportService
                 )
 
                 ExportacaoResultado(
@@ -73,7 +76,17 @@ class ExportacaoUseCase(
             }
 
             TipoExportacao.PDF -> {
-                throw UnsupportedOperationException("Exportação em PDF será implementada em uma próxima versão.")
+                val arquivo = pdfExportService.exportarRelatorioPdf(
+                    context = context,
+                    dados = dados
+                )
+
+                ExportacaoResultado(
+                    arquivo = arquivo,
+                    tipo = tipo,
+                    mimeType = "application/pdf",
+                    tituloCompartilhamento = "Compartilhar relatório PDF"
+                )
             }
         }
     }

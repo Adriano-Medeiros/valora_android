@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.7.0 - Relatório PDF da coleta
+
+### Adicionado
+
+- Adicionada exportação de relatório PDF da coleta.
+- Adicionado `PdfExportService` para geração de PDF nativo no Android.
+- Adicionada opção "Relatório PDF" no diálogo de exportação.
+- Adicionado suporte para exportação PDF individual pela tela de detalhe da coleta.
+- Adicionado suporte para exportação PDF em lote pela tela de exportação.
+- Adicionado o arquivo `Relatorio_Coleta.pdf` dentro do pacote ZIP quando houver uma única coleta.
+- Adicionado o arquivo `Relatorio_Coletas.pdf` dentro do pacote ZIP quando houver várias coletas.
+
+### Melhorado
+
+- Melhorado o pacote ZIP para incluir Excel, PDF e fotos organizadas.
+- Melhorado o fluxo centralizado de exportação usando o mesmo `ExportacaoUseCase`.
+- Melhorada a geração de relatórios para conter dados gerais, variáveis, benfeitorias e fotos.
+
+### Técnico
+
+- Criado `PdfExportService` em `data/export`.
+- Atualizado `ExportacaoUseCase` para tratar `TipoExportacao.PDF`.
+- Atualizado `ZipExportService` para incluir o PDF no pacote completo.
+- Atualizado `ExportacaoDialog` para habilitar a opção de PDF.
+- Atualizado `versionCode` para 7.
+- Atualizado `versionName` para 0.7.0.
+
+---
+
 ## v0.6.0 - Refatoração do módulo de exportação
 
 ### Adicionado
@@ -40,6 +69,7 @@
 
 - O relatório PDF ainda não foi implementado; a estrutura foi preparada para inclusão futura.
 
+---
 
 ## v0.5.0 - Ordenação de variáveis no formulário
 
