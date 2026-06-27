@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.7.2 - Logomarca no cabeçalho do relatório PDF
+
+### Melhorado
+
+- Substituído o texto `RC` pela logomarca do RuralColeta no cabeçalho do relatório PDF.
+- Melhorada a identidade visual do relatório PDF.
+- Melhorada a apresentação profissional do cabeçalho do PDF.
+- Mantido fallback com texto `RC` caso a logomarca não seja carregada.
+
+### Técnico
+
+- Atualizado `PdfExportService`.
+- Adicionado carregamento da logomarca a partir de `R.mipmap.ic_logo`.
+- Atualizado `versionCode` para 9.
+- Atualizado `versionName` para 0.7.2.
+
+---
+
 ## v0.7.1 - Melhorias visuais do relatório PDF
 
 ### Melhorado

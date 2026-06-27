@@ -1,87 +1,74 @@
 # RuralColeta
 
-Aplicativo Android para coleta de dados de imóveis rurais, com foco na organização das informações de campo utilizadas em processos de avaliação rural.
+Aplicativo Android para coleta de dados de imóveis rurais em campo, com foco em avaliações rurais pelo método comparativo direto de dados de mercado.
 
-O RuralColeta permite cadastrar grupos, variáveis e formulários personalizados, registrar dados de imóveis avaliandos e amostrais, capturar coordenadas geográficas, registrar fotos, organizar benfeitorias e visualizar as coletas em mapa.
+O RuralColeta permite cadastrar formulários de pesquisa, registrar imóveis avaliandos e dados amostrais, coletar variáveis, fotos, benfeitorias, coordenadas geográficas e gerar exportações em Excel, ZIP e PDF.
 
 ---
 
-## Versão atual
+## Status atual
+
+Versão atual: `v0.7.2`
 
 ```kotlin
-versionCode = 5
-versionName = "0.5.0"
+versionCode = 9
+versionName = "0.7.2"
 ```
 
----
+Esta versão inclui:
 
-## Objetivo do projeto
-
-O objetivo do RuralColeta é facilitar a coleta padronizada de informações de imóveis rurais diretamente em campo, permitindo que o usuário monte seus próprios formulários de pesquisa conforme a necessidade da avaliação.
-
-O aplicativo não realiza a avaliação do imóvel nem calcula o valor de mercado. Ele atua na etapa de coleta, organização, edição e exportação dos dados coletados.
-
----
-
-## Principais funcionalidades
-
-* Cadastro de grupos de variáveis.
-* Edição de grupos de variáveis.
-* Cadastro de variáveis personalizadas.
-* Edição de variáveis.
-* Cadastro de opções para variáveis do tipo lista.
-* Criação de formulários de pesquisa.
-* Edição de formulários de pesquisa.
-* Vinculação de variáveis aos formulários.
-* Alteração das variáveis vinculadas a um formulário existente.
-* Coleta de dados de imóvel avaliando.
-* Coleta de dados amostrais.
-* Registro de dados gerais da coleta.
-* Captura de latitude e longitude.
-* Edição de coletas já cadastradas.
-* Campos dinâmicos por formulário.
-* Suporte a campos de texto, número, lista, sim/não e data.
-* DatePicker para campos do tipo data.
-* Registro de fotos da coleta.
-* Cadastro de benfeitorias.
-* Registro de fotos por benfeitoria.
-* Tela de resumo da coleta.
-* Finalização da coleta.
-* Histórico de coletas.
-* Mapa com pontos georreferenciados.
-* Filtros no mapa por tipo e status da coleta.
-* BottomSheet com detalhes ao clicar no marcador do mapa.
-* Preferências do aplicativo.
+* Relatório PDF com logomarca do RuralColeta no cabeçalho.
+* Relatório PDF com layout visual melhorado.
+* Exportação individual pela tela de detalhe da coleta.
+* Exportação em lote pela tela de exportação.
+* Exportação em Excel.
+* Exportação em pacote completo ZIP.
+* Inclusão do PDF dentro do pacote ZIP.
+* Estrutura ZIP organizada com Excel, PDF, fotos gerais e fotos de benfeitorias.
+* Módulo centralizado de exportação com `ExportacaoUseCase`.
+* Diálogo reutilizável para escolha do tipo de exportação.
+* Ordenação das variáveis no formulário de pesquisa.
+* Edição de grupos, variáveis e formulários.
+* Mapa estável com OSMDroid.
+* Campos inteligentes com teclado adequado por tipo de dado.
+* Campo de data com DatePicker.
 * Tutorial guiado de primeiro acesso.
-* Botão para visualizar novamente o tutorial.
-* Exibição da versão do app na Splash Screen.
-* Ordenação das variáveis dentro do formulário de pesquisa.
-* Numeração visual das variáveis selecionadas.
-* Reordenação das variáveis com botões de subir e descer.
+* Exibição da versão do aplicativo na Splash Screen.
+
 ---
 
-## Fluxo básico de uso
+## Objetivo do aplicativo
 
-No primeiro uso, o usuário deve configurar a estrutura da coleta:
+O RuralColeta foi desenvolvido para auxiliar avaliadores de imóveis rurais na coleta organizada de dados em campo.
 
-1. Criar um grupo de variáveis.
-2. Criar as variáveis.
-3. Criar o formulário de pesquisa.
-4. Iniciar uma nova coleta.
-5. Escolher o tipo da coleta: avaliando ou amostral.
-6. Preencher os dados gerais.
-7. Preencher os campos dinâmicos do formulário.
-8. Registrar fotos.
-9. Cadastrar benfeitorias, se houver.
-10. Revisar o resumo.
-11. Finalizar a coleta.
+O aplicativo não realiza a avaliação monetária do imóvel. Seu objetivo é coletar, organizar e exportar dados para posterior análise técnica, inclusive em sistemas externos ou plataformas web, como o Valora.
 
-Caso necessário, o usuário também pode editar posteriormente:
+Principais objetivos:
 
-* Grupos de variáveis.
-* Variáveis.
-* Formulários de pesquisa.
-* Coletas já cadastradas.
+* Coletar dados de imóveis rurais avaliandos.
+* Coletar dados amostrais comparáveis.
+* Registrar variáveis personalizadas.
+* Registrar fotos gerais do imóvel.
+* Registrar benfeitorias e fotos vinculadas.
+* Registrar coordenadas geográficas.
+* Exportar os dados coletados em Excel.
+* Exportar pacote completo com Excel, PDF e fotos.
+* Gerar relatório PDF da coleta.
+* Facilitar o trabalho de campo do avaliador rural.
+
+---
+
+## Identificação do projeto
+
+```text
+Nome do aplicativo: RuralColeta
+Package: br.com.agrobox.ruralcoleta
+Plataforma: Android
+Linguagem: Kotlin
+Interface: Jetpack Compose
+Banco local: Room
+Arquitetura: MVVM
+```
 
 ---
 
@@ -90,307 +77,271 @@ Caso necessário, o usuário também pode editar posteriormente:
 * Kotlin
 * Android Studio
 * Jetpack Compose
-* MVVM
+* Material 3
 * Room Database
-* Navigation Compose
-* Kotlin Coroutines
+* ViewModel
 * StateFlow
+* Navigation Compose
+* Coroutines
 * OSMDroid
-* Material Design 3
-* Gradle Kotlin DSL
+* Apache POI
+* FileProvider
+* SharedPreferences
+* Android Graphics PDF nativo
 
 ---
 
-## Arquitetura
+## Arquitetura geral
 
-O projeto segue uma organização baseada em camadas, separando responsabilidades entre dados, repositórios, telas, estados e ViewModels.
-
-Estrutura geral:
+O projeto segue uma estrutura organizada por camadas:
 
 ```text
 app/src/main/java/br/com/agrobox/ruralcoleta
+│
 ├── data
+│   ├── export
 │   ├── local
 │   │   ├── dao
 │   │   ├── database
 │   │   └── entity
 │   └── repository
-├── navigation
+│
+├── domain
+│   └── exportacao
+│
 ├── ui
-│   ├── coleta
 │   ├── components
-│   ├── configuracoes
+│   ├── coleta
 │   ├── dashboard
-│   ├── grupo
+│   ├── exportacao
 │   ├── mapa
 │   ├── modelo
+│   ├── preferencias
 │   ├── splash
 │   └── variavel
+│
 └── util
 ```
 
 ---
 
-## Módulos principais
+## Principais módulos
 
 ### Dashboard
 
-Tela inicial do aplicativo, exibindo indicadores das coletas, atalhos e informações resumidas.
+Tela inicial do aplicativo.
+
+Exibe resumo das coletas cadastradas, incluindo:
+
+* Coletas recentes.
+* Rascunhos.
+* Coletas concluídas.
+* Imóveis avaliandos.
+* Dados amostrais.
+* Acesso rápido às principais funcionalidades.
+
+---
 
 ### Configurações
 
-Área onde o usuário acessa os cadastros estruturais do app:
+Área responsável pelos cadastros estruturais do aplicativo.
+
+Permite acessar:
 
 * Grupos de variáveis.
 * Variáveis.
 * Formulários de pesquisa.
 * Preferências.
-* Sobre o app.
+* Tutorial guiado.
+
+---
 
 ### Grupos de variáveis
 
-Permite cadastrar e editar grupos usados para organizar os campos do formulário.
+Permite cadastrar e editar grupos usados para organizar variáveis.
 
 Exemplos:
 
 * Dados do imóvel.
 * Localização.
+* Acesso.
 * Solo.
+* Topografia.
 * Benfeitorias.
-* Mercado.
 * Produção.
+
+---
 
 ### Variáveis
 
-Permite cadastrar e editar os campos que serão preenchidos durante a coleta.
+Permite cadastrar e editar variáveis utilizadas nos formulários de pesquisa.
 
-Tipos suportados:
+Tipos de campo suportados:
 
 * Texto.
 * Número.
-* Lista.
-* Sim/Não.
+* Lista de opções.
 * Data.
+
+As variáveis podem conter:
+
+* Nome.
+* Grupo.
+* Tipo de campo.
+* Unidade.
+* Obrigatoriedade.
+* Dica de preenchimento.
+* Opções, quando forem do tipo lista.
+
+---
 
 ### Formulários de pesquisa
 
-Permite criar e editar formulários personalizados, selecionando quais variáveis farão parte da coleta.
+Permite criar e editar formulários de coleta.
 
-O formulário define quais campos serão exibidos na etapa de preenchimento dos dados dinâmicos.
+Cada formulário pode conter variáveis selecionadas pelo usuário.
 
-### Coleta
+Recursos disponíveis:
 
-Fluxo principal para criação e edição de coletas.
+* Seleção de variáveis.
+* Ordenação das variáveis.
+* Numeração visual das variáveis selecionadas.
+* Botões para mover variável para cima ou para baixo.
+* Edição posterior do formulário.
+* Uso do formulário em novas coletas.
 
-Inclui:
+Observação: internamente o projeto ainda usa a nomenclatura `ModeloColeta`, mas na interface do usuário o termo adotado é `Formulário de pesquisa`.
 
-* Tipo de coleta.
-* Dados gerais.
-* Formulário dinâmico.
-* Fotos.
-* Benfeitorias.
-* Resumo.
-* Conclusão.
+---
 
-### Mapa
+## Coleta de dados
 
-Exibe as coletas com coordenadas válidas em um mapa usando OSMDroid.
+O fluxo de coleta permite registrar dados de imóveis rurais avaliandos ou dados amostrais.
 
-Permite filtrar por:
+Tipos de coleta:
 
-* Avaliando.
-* Amostral.
+* Imóvel avaliando.
+* Dado amostral.
+
+Status da coleta:
+
 * Rascunho.
 * Concluída.
 
-Ao clicar em um marcador, o app exibe um BottomSheet com detalhes da coleta e opção para abrir o registro.
+Principais informações coletadas:
 
-### Preferências
-
-Permite configurar comportamentos do app, como:
-
-* Captura automática de GPS.
-* Exibição de rascunhos no Dashboard.
-* Período de atividades recentes.
-* Reexibição do tutorial de primeiro acesso.
-
----
-
-## Tutorial guiado
-
-O aplicativo possui um onboarding guiado para orientar o usuário no primeiro uso.
-
-O tutorial ensina a sequência correta:
-
-1. Criar grupo.
-2. Criar variáveis.
-3. Criar formulário de pesquisa.
-
-O tutorial pode ser acessado novamente em:
-
-```text
-Configurações > Preferências > Ver tutorial novamente
-```
+* Nome de referência.
+* Município.
+* UF.
+* Informante.
+* Contato do informante.
+* Latitude.
+* Longitude.
+* Respostas das variáveis.
+* Fotos gerais.
+* Benfeitorias.
+* Fotos das benfeitorias.
 
 ---
 
-## Banco de dados local
+## Dados gerais da coleta
 
-O aplicativo utiliza Room Database para persistência local dos dados.
+A tela de dados gerais permite cadastrar informações básicas da coleta.
 
-As informações são armazenadas no próprio dispositivo, permitindo uso offline.
+Campos principais:
 
-Principais entidades:
+* Tipo da coleta.
+* Formulário de pesquisa.
+* Nome de referência.
+* Município.
+* UF.
+* Informante.
+* Contato do informante.
+* Latitude.
+* Longitude.
 
-* GrupoVariavel
-* Variavel
-* OpcaoVariavel
-* ModeloColeta
-* ModeloColetaVariavel
-* Coleta
-* RespostaColeta
-* FotoColeta
-* Benfeitoria
+O aplicativo permite obter coordenadas geográficas quando o GPS estiver disponível.
+
+---
+
+## Formulário dinâmico
+
+O formulário dinâmico é gerado com base nas variáveis vinculadas ao formulário de pesquisa selecionado.
+
+Recursos disponíveis:
+
+* Campos de texto.
+* Campos numéricos.
+* Campos de lista.
+* Campos de data com DatePicker.
+* Teclado adequado para número decimal.
+* Teclado adequado para telefone.
+* Tratamento de latitude e longitude com valores negativos.
+* Validação de campos obrigatórios.
+* Carregamento das respostas ao editar coleta existente.
+
+---
+
+## Fotos gerais
+
+O aplicativo permite registrar fotos gerais da coleta.
+
+As fotos podem ser usadas para:
+
+* Documentar características gerais do imóvel.
+* Apoiar a vistoria.
+* Integrar o pacote ZIP.
+* Integrar o relatório PDF.
+* Integrar exportações futuras.
+
+---
+
+## Benfeitorias
+
+O aplicativo permite cadastrar benfeitorias vinculadas à coleta.
+
+Cada benfeitoria pode conter:
+
+* Nome.
+* Categoria.
+* Descrição.
+* Fotos vinculadas.
+
+Exemplos de benfeitorias:
+
+* Casa.
+* Curral.
+* Cerca.
+* Galpão.
+* Poço.
+* Estrada interna.
+* Açude.
 
 ---
 
 ## Mapa
 
-O mapa utiliza OSMDroid.
+O RuralColeta possui uma tela de mapa com OSMDroid.
 
-As coletas só aparecem no mapa quando possuem:
+Recursos disponíveis:
 
-```text
-latitude válida
-longitude válida
-```
+* Exibição das coletas georreferenciadas.
+* Filtro por tipo de coleta.
+* Filtro por status.
+* Marcadores no mapa.
+* BottomSheet com informações da coleta.
+* Abertura da coleta a partir do mapa.
 
-Foi mantido o marker padrão do OSMDroid para maior estabilidade do aplicativo.
+Filtros disponíveis:
 
----
+* Imóvel avaliando.
+* Dado amostral.
+* Rascunho.
+* Concluída.
 
-## Entrada de dados
-
-O aplicativo utiliza tipos de teclado adequados conforme o campo:
-
-* Texto: teclado normal.
-* Número: teclado decimal.
-* Contato: teclado de telefone.
-* Latitude e longitude: teclado decimal com suporte a valores negativos.
-* Data: seletor de data com DatePicker.
+A implementação atual utiliza o marcador padrão do OSMDroid para garantir estabilidade.
 
 ---
-
-## Versionamento
-
-A versão do aplicativo é definida no Gradle do módulo app.
-
-Arquivo:
-
-```text
-app/build.gradle.kts
-```
-
-Exemplo:
-
-```kotlin
-defaultConfig {
-    applicationId = "br.com.agrobox.ruralcoleta"
-    minSdk = 26
-    targetSdk = 36
-    versionCode = 4
-    versionName = "0.4.0"
-}
-```
-
-A versão exibida no app é recuperada automaticamente através do `BuildConfig`.
-
----
-
-## Como executar o projeto
-
-1. Clonar o repositório:
-
-```bash
-git clone URL_DO_REPOSITORIO
-```
-
-2. Abrir o projeto no Android Studio.
-
-3. Aguardar a sincronização do Gradle.
-
-4. Executar o app em um emulador ou dispositivo Android.
-
----
-
-## Requisitos mínimos
-
-* Android Studio atualizado.
-* JDK compatível com o projeto.
-* Dispositivo ou emulador Android.
-* Android SDK configurado.
-
-Configuração atual:
-
-```text
-minSdk: 26
-targetSdk: 36
-```
-
----
-
-## Build do projeto
-
-Para gerar o build debug:
-
-```bash
-./gradlew assembleDebug
-```
-
-No Windows:
-
-```bash
-.\gradlew assembleDebug
-```
-
-Para limpar e compilar:
-
-```bash
-.\gradlew clean build
-```
-
-Caso o terminal não reconheça o Java, configure o `JAVA_HOME` apontando para o Java do Android Studio, normalmente em:
-
-```text
-C:\Program Files\Android\Android Studio\jbr
-```
-
----
-
-## Status atual
-
-Versão atual: `v0.6.0`
-
-Esta versão inclui:
-
-* Refatoração completa do módulo de exportação.
-* Exportação individual pela tela de detalhe da coleta.
-* Exportação em lote pela tela de exportação.
-* Exportação em Excel.
-* Exportação de pacote completo ZIP.
-* Estrutura ZIP organizada com:
-
-  * `Dados_Coleta.xlsx`
-  * `Fotos_Gerais`
-  * `Benfeitorias`
-* Módulo centralizado de exportação com `ExportacaoUseCase`.
-* Diálogo reutilizável para escolha do tipo de exportação.
-* Preparação para futura exportação em PDF.
-* Ordenação das variáveis no formulário de pesquisa.
-* Edição de grupos, variáveis e formulários.
-* Mapa estável com OSMDroid.
-* Campos inteligentes e DatePicker.
-* Tutorial guiado de primeiro acesso.
 
 ## Exportação
 
@@ -400,14 +351,94 @@ Tipos disponíveis:
 
 * Excel.
 * Pacote completo ZIP.
-* PDF, previsto para versão futura.
+* Relatório PDF.
 
-Estrutura do pacote ZIP:
+Arquitetura da exportação:
+
+```text
+Tela de detalhe da coleta
+Tela de exportação em lote
+        ↓
+ExportacaoDialog
+        ↓
+ExportacaoViewModel
+        ↓
+ExportacaoUseCase
+        ↓
+ExcelExportService
+PdfExportService
+ZipExportService
+```
+
+---
+
+## Exportação Excel
+
+A exportação Excel gera uma planilha com os dados das coletas selecionadas.
+
+O Excel contém:
+
+* Dados gerais da coleta.
+* Tipo da coleta.
+* Status.
+* Município.
+* UF.
+* Informante.
+* Contato.
+* Coordenadas.
+* Variáveis respondidas.
+* Referências a fotos.
+* Dados de benfeitorias, quando aplicável.
+
+Arquivo gerado:
+
+```text
+Dados_Coleta.xlsx
+```
+
+---
+
+## Exportação PDF
+
+A exportação PDF gera um relatório visual da coleta.
+
+O PDF contém:
+
+* Cabeçalho com logomarca do RuralColeta.
+* Título do relatório.
+* Resumo inicial da coleta.
+* Dados gerais.
+* Variáveis respondidas.
+* Benfeitorias.
+* Fotos gerais.
+* Fotos das benfeitorias.
+* Rodapé com data de geração e paginação.
+
+O relatório PDF pode ser gerado para:
+
+* Uma coleta individual.
+* Várias coletas em lote.
+
+Arquivos gerados:
+
+```text
+Relatorio_Coleta.pdf
+Relatorio_Coletas.pdf
+```
+
+---
+
+## Pacote completo ZIP
+
+O pacote ZIP reúne os principais arquivos da exportação.
+
+Para uma única coleta, a estrutura é:
 
 ```text
 RuralColeta_2026-06-27_145530.zip
 │
 ├── Dados_Coleta.xlsx
+├── Relatorio_Coleta.pdf
 ├── Fotos_Gerais
 │
 └── Benfeitorias
@@ -416,29 +447,324 @@ RuralColeta_2026-06-27_145530.zip
     └── Cerca
 ```
 
-Quando várias coletas são exportadas juntas, o ZIP organiza cada coleta em sua própria pasta.
+Para várias coletas, a estrutura é:
+
+```text
+RuralColeta_2026-06-27_145530.zip
+│
+├── Dados_Coleta.xlsx
+├── Relatorio_Coletas.pdf
+│
+├── 01_Fazenda_Santa_Maria
+│   ├── Fotos_Gerais
+│   └── Benfeitorias
+│       ├── Casa
+│       └── Curral
+│
+└── 02_Sitio_Boa_Vista
+    ├── Fotos_Gerais
+    └── Benfeitorias
+        └── Cerca
+```
 
 ---
 
-## Próximas melhorias previstas
+## Tutorial guiado
 
-* Melhorar exportação dos dados coletados.
-* Exportar fotos originais em ZIP.
-* Melhorar relatórios em Excel.
-* Implementar relatório PDF.
-* Melhorar tela de histórico.
-* Melhorar tela de detalhes da coleta.
-* Criar backup/restauração local dos dados.
-* Avaliar integração futura com backend web.
+O aplicativo possui tutorial guiado de primeiro acesso.
 
----
+O tutorial orienta o usuário na sequência inicial de uso:
 
-## Autor
+* Criar grupo de variáveis.
+* Criar variáveis.
+* Criar formulário de pesquisa.
+* Iniciar o uso do aplicativo.
 
-Projeto desenvolvido por Adriano Medeiros.
+Também existe opção para visualizar o tutorial novamente pela tela de Preferências.
 
 ---
 
-## Observação
+## Preferências
 
-O RuralColeta está em desenvolvimento e pode receber ajustes de estrutura, interface e funcionalidades conforme a evolução do projeto.
+A tela de preferências permite configurar comportamentos do aplicativo.
+
+Recursos disponíveis:
+
+* Visualizar tutorial novamente.
+* Preferências locais do usuário.
+* Ajustes futuros de exibição e comportamento.
+
+---
+
+## Splash Screen
+
+A Splash Screen exibe:
+
+* Imagem de abertura do aplicativo.
+* Barra de progresso animada.
+* Versão atual do aplicativo.
+
+A versão é recuperada a partir do `BuildConfig`, mantendo o Gradle como fonte única de versionamento.
+
+---
+
+## Controle de versão
+
+A versão do aplicativo é controlada no arquivo:
+
+```text
+app/build.gradle.kts
+```
+
+Exemplo atual:
+
+```kotlin
+defaultConfig {
+    applicationId = "br.com.agrobox.ruralcoleta"
+    minSdk = 26
+    targetSdk = 36
+    versionCode = 9
+    versionName = "0.7.2"
+}
+```
+
+---
+
+## Histórico de versões
+
+### v0.7.2
+
+* Adicionada logomarca do RuralColeta no cabeçalho do relatório PDF.
+* Substituído o texto `RC` pela logo do aplicativo.
+* Melhorada a identidade visual do PDF.
+* Mantido fallback com texto `RC` caso a logomarca não seja carregada.
+
+### v0.7.1
+
+* Melhorado o layout visual do relatório PDF.
+* Melhorado o cabeçalho.
+* Melhorado o resumo inicial da coleta.
+* Melhorada a apresentação dos dados gerais.
+* Melhorada a apresentação das variáveis.
+* Melhorada a apresentação das benfeitorias.
+* Melhorada a organização das fotos.
+* Melhorado o rodapé com data e paginação.
+
+### v0.7.0
+
+* Adicionada exportação de relatório PDF.
+* Adicionado `PdfExportService`.
+* Adicionada opção de PDF no diálogo de exportação.
+* Adicionado PDF individual.
+* Adicionado PDF em lote.
+* Adicionado PDF dentro do pacote ZIP.
+
+### v0.6.0
+
+* Refatorado o módulo de exportação.
+* Adicionado `ExportacaoUseCase`.
+* Adicionado `ExportacaoDialog`.
+* Adicionado `ExportacaoViewModel`.
+* Adicionado ZIP completo.
+* Centralizada a exportação individual e em lote.
+
+### v0.5.0
+
+* Adicionada ordenação de variáveis no formulário.
+* Adicionada numeração das variáveis selecionadas.
+* Adicionados botões para mover variável para cima e para baixo.
+
+### v0.4.0
+
+* Adicionada edição de grupos.
+* Adicionada edição de variáveis.
+* Adicionada edição de formulários de pesquisa.
+
+### v0.3.0
+
+* Adicionado mapa com OSMDroid.
+* Adicionados campos inteligentes.
+* Adicionado DatePicker.
+* Adicionado tutorial guiado.
+* Adicionada versão na Splash Screen.
+
+---
+
+## Como compilar
+
+No terminal, dentro da pasta do projeto:
+
+```powershell
+.\gradlew assembleDebug
+```
+
+O APK de debug será gerado em:
+
+```text
+app/build/outputs/apk/debug/
+```
+
+---
+
+## Como executar no Android Studio
+
+* Abrir o projeto no Android Studio.
+* Aguardar o Gradle Sync.
+* Selecionar o módulo `app`.
+* Selecionar um emulador ou dispositivo físico.
+* Clicar em `Run`.
+
+---
+
+## Requisitos mínimos
+
+* Android Studio instalado.
+* JDK configurado.
+* Gradle Sync funcionando.
+* Emulador Android ou dispositivo físico.
+* Android 8.0 ou superior.
+
+Configuração do aplicativo:
+
+```text
+minSdk = 26
+targetSdk = 36
+```
+
+---
+
+## Branches recomendadas
+
+Fluxo recomendado de trabalho:
+
+```text
+master
+feature/nome-da-funcionalidade
+```
+
+Exemplos:
+
+```text
+feature/exportacao
+feature/pdf-relatorio-coleta
+feature/pdf-layout-v071
+feature/backup-restauracao
+```
+
+---
+
+## Comandos úteis de Git
+
+Criar nova branch:
+
+```powershell
+git checkout -b feature/nome-da-funcionalidade
+```
+
+Enviar branch para o GitHub:
+
+```powershell
+git push -u origin feature/nome-da-funcionalidade
+```
+
+Commit:
+
+```powershell
+git status
+git add .
+git commit -m "feat: descricao da funcionalidade"
+git push
+```
+
+Merge na master:
+
+```powershell
+git checkout master
+git pull origin master
+git merge feature/nome-da-funcionalidade
+git push origin master
+```
+
+Criar tag de versão:
+
+```powershell
+git tag -a v0.7.2 -m "v0.7.2 - Logomarca no cabeçalho do relatório PDF"
+git push origin v0.7.2
+```
+
+---
+
+## Próximas etapas planejadas
+
+### v0.8.0 - Backup e restauração
+
+Objetivo:
+
+* Gerar backup completo do banco local.
+* Incluir fotos no backup.
+* Permitir restauração em outro dispositivo.
+* Proteger dados do usuário em campo.
+
+Estrutura prevista:
+
+```text
+RuralColeta_Backup_2026-06-27_153000.zip
+│
+├── ruralcoleta.db
+├── ruralcoleta.db-shm
+├── ruralcoleta.db-wal
+├── fotos
+├── metadata.json
+└── versao.txt
+```
+
+### v0.8.1 - Melhorias em fotos
+
+Objetivo:
+
+* Melhorar organização das fotos.
+* Adicionar legendas.
+* Adicionar observações.
+* Melhorar qualidade e tamanho dos arquivos.
+* Preparar uso das fotos em relatórios mais avançados.
+
+### v0.9.0 - Preparação para integração com Valora Web
+
+Objetivo:
+
+* Preparar sincronização futura.
+* Estruturar autenticação.
+* Preparar envio de coletas via API.
+* Preparar integração com Django REST Framework.
+
+### v1.0.0 - MVP estável
+
+Objetivo:
+
+* Consolidar funcionalidades principais.
+* Estabilizar coleta.
+* Estabilizar exportações.
+* Estabilizar PDF.
+* Estabilizar backup.
+* Preparar uso real em campo.
+
+---
+
+## Observações técnicas
+
+* O aplicativo funciona localmente, sem depender de internet para a coleta.
+* A internet pode ser necessária apenas para mapas, compartilhamentos e recursos externos.
+* Os dados são armazenados localmente com Room.
+* As fotos são salvas no armazenamento do aplicativo.
+* As exportações usam `FileProvider` para compartilhamento seguro.
+* O PDF é gerado com recursos nativos do Android.
+* O Excel é gerado com Apache POI.
+* O ZIP é gerado com APIs nativas de compactação do Java/Kotlin.
+
+---
+
+## Licença
+
+Projeto em desenvolvimento.
+
+Uso interno e comercial condicionado às definições do proprietário do código-fonte.

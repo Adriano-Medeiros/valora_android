@@ -6,10 +6,13 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
+import androidx.core.content.ContextCompat
+import br.com.agrobox.ruralcoleta.R
 import br.com.agrobox.ruralcoleta.data.local.entity.BenfeitoriaEntity
 import br.com.agrobox.ruralcoleta.data.local.entity.ColetaEntity
 import br.com.agrobox.ruralcoleta.data.local.entity.FotoBenfeitoriaEntity
@@ -100,6 +103,7 @@ class PdfExportService {
         totalColetas: Int
     ) {
         escritor.cabecalhoRelatorio(
+            context = context,
             titulo = "Relatório de Coleta Rural",
             subtitulo = if (totalColetas > 1) {
                 "Coleta $numeroColeta de $totalColetas"
@@ -436,6 +440,34 @@ class PdfExportService {
             .take(70)
     }
 
+    private fun carregarLogoRuralColeta(
+        context: Context
+    ): Bitmap? {
+        return try {
+            val drawable = ContextCompat.getDrawable(
+                context,
+                R.mipmap.ic_logo
+            ) ?: return null
+
+            val largura = 192
+            val altura = 192
+
+            val bitmap = Bitmap.createBitmap(
+                largura,
+                altura,
+                Bitmap.Config.ARGB_8888
+            )
+
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, largura, altura)
+            drawable.draw(canvas)
+
+            bitmap
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     private fun carregarBitmapReduzido(
         context: Context,
         caminho: String,
@@ -577,10 +609,21 @@ class PdfExportService {
         }
 
         private val paintMarca = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = branco
+            color = verdeEscuro
             textSize = 15f
             textAlign = Paint.Align.CENTER
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
+        private val paintLogoFundo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = branco
+            style = Paint.Style.FILL
+        }
+
+        private val paintLogoBorda = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(210, 232, 220)
+            style = Paint.Style.STROKE
+            strokeWidth = 1.4f
         }
 
         private val paintSecao = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -672,6 +715,7 @@ class PdfExportService {
         }
 
         fun cabecalhoRelatorio(
+            context: Context,
             titulo: String,
             subtitulo: String,
             nomeReferencia: String,
@@ -696,18 +740,11 @@ class PdfExportService {
                 paintVerdeEscuro
             )
 
-            canvas?.drawCircle(
-                margem + 33f,
-                topo + 34f,
-                20f,
-                paintVerde
-            )
-
-            canvas?.drawText(
-                "RC",
-                margem + 33f,
-                topo + 39f,
-                paintMarca
+            desenharMarcaRuralColeta(
+                context = context,
+                xCentro = margem + 33f,
+                yCentro = topo + 34f,
+                tamanho = 42f
             )
 
             canvas?.drawText(
@@ -1045,6 +1082,97 @@ class PdfExportService {
 
                 y += alturaCard + 14f
             }
+        }
+
+
+        private fun desenharMarcaRuralColeta(
+            context: Context,
+            xCentro: Float,
+            yCentro: Float,
+            tamanho: Float
+        ) {
+            val canvasAtual = canvas ?: return
+            val metade = tamanho / 2f
+            val rectLogo = RectF(
+                xCentro - metade,
+                yCentro - metade,
+                xCentro + metade,
+                yCentro + metade
+            )
+
+            canvasAtual.drawRoundRect(
+                rectLogo,
+                10f,
+                10f,
+                paintLogoFundo
+            )
+
+            val bitmapLogo = carregarLogoRuralColeta(context)
+
+            if (bitmapLogo != null) {
+                val padding = 2.5f
+                val destinoLogo = RectF(
+                    rectLogo.left + padding,
+                    rectLogo.top + padding,
+                    rectLogo.right - padding,
+                    rectLogo.bottom - padding
+                )
+
+                desenharBitmapComCantosArredondados(
+                    bitmap = bitmapLogo,
+                    destino = destinoLogo,
+                    raio = 8f
+                )
+
+                bitmapLogo.recycle()
+            } else {
+                canvasAtual.drawCircle(
+                    xCentro,
+                    yCentro,
+                    metade - 2f,
+                    paintVerde
+                )
+
+                canvasAtual.drawText(
+                    "RC",
+                    xCentro,
+                    yCentro + 5f,
+                    paintMarca
+                )
+            }
+
+            canvasAtual.drawRoundRect(
+                rectLogo,
+                10f,
+                10f,
+                paintLogoBorda
+            )
+        }
+
+        private fun desenharBitmapComCantosArredondados(
+            bitmap: Bitmap,
+            destino: RectF,
+            raio: Float
+        ) {
+            val canvasAtual = canvas ?: return
+            val path = Path().apply {
+                addRoundRect(
+                    destino,
+                    raio,
+                    raio,
+                    Path.Direction.CW
+                )
+            }
+
+            canvasAtual.save()
+            canvasAtual.clipPath(path)
+            canvasAtual.drawBitmap(
+                bitmap,
+                null,
+                destino,
+                null
+            )
+            canvasAtual.restore()
         }
 
         private fun desenharCardFoto(
