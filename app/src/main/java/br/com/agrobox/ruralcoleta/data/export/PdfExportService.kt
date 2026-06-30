@@ -265,8 +265,9 @@ class PdfExportService {
                 FotoPdfItem(
                     caminho = foto.caminhoArquivo,
                     titulo = "Foto geral ${index + 1}",
-                    legenda = montarLegendaFoto(
-                        legenda = foto.legenda,
+                    legenda = foto.legenda.orEmpty(),
+                    observacao = foto.observacao.orEmpty(),
+                    detalhes = montarDetalhesFoto(
                         latitude = foto.latitude,
                         longitude = foto.longitude,
                         dataHora = foto.dataHora
@@ -309,8 +310,9 @@ class PdfExportService {
                         FotoPdfItem(
                             caminho = foto.caminhoArquivo,
                             titulo = "Foto ${index + 1}",
-                            legenda = montarLegendaFoto(
-                                legenda = foto.legenda,
+                            legenda = foto.legenda.orEmpty(),
+                            observacao = foto.observacao.orEmpty(),
+                            detalhes = montarDetalhesFoto(
                                 latitude = foto.latitude,
                                 longitude = foto.longitude,
                                 dataHora = foto.dataHora
@@ -356,17 +358,12 @@ class PdfExportService {
         ).joinToString(" ")
     }
 
-    private fun montarLegendaFoto(
-        legenda: String?,
+    private fun montarDetalhesFoto(
         latitude: Double?,
         longitude: Double?,
         dataHora: Long
     ): String {
         val partes = mutableListOf<String>()
-
-        if (!legenda.isNullOrBlank()) {
-            partes.add(legenda)
-        }
 
         partes.add("Data/hora: ${formatarDataHora(dataHora)}")
 
@@ -566,7 +563,9 @@ class PdfExportService {
     private data class FotoPdfItem(
         val caminho: String,
         val titulo: String,
-        val legenda: String
+        val legenda: String,
+        val observacao: String,
+        val detalhes: String
     )
 
     private inner class EscritorPdf(
@@ -1059,8 +1058,8 @@ class PdfExportService {
             fotos: List<FotoPdfItem>
         ) {
             val larguraColuna = (larguraConteudo - 12f) / 2f
-            val alturaImagem = 145f
-            val alturaCard = 208f
+            val alturaImagem = 120f
+            val alturaCard = 252f
 
             fotos.chunked(2).forEach { linhaFotos ->
                 garantirEspaco(alturaCard + 12f)
@@ -1249,14 +1248,50 @@ class PdfExportService {
                 paintRotulo
             )
 
+            val yLegendaRotulo = yTopo + alturaImagem + 43f
+            canvas?.drawText(
+                "Legenda:",
+                x + 8f,
+                yLegendaRotulo,
+                paintRotulo
+            )
+
             desenharTextoQuebradoEmPosicao(
-                texto = foto.legenda,
+                texto = foto.legenda.ifBlank { "Sem legenda informada" },
                 paint = paintTextoPequeno,
                 x = x + 8f,
-                yTextoInicial = yTopo + alturaImagem + 42f,
+                yTextoInicial = yLegendaRotulo + 11f,
                 larguraMaxima = largura - 16f,
-                alturaLinha = 10.5f,
+                alturaLinha = 10.2f,
+                maxLinhas = 2
+            )
+
+            val yObservacaoRotulo = yLegendaRotulo + 36f
+            canvas?.drawText(
+                "Observação:",
+                x + 8f,
+                yObservacaoRotulo,
+                paintRotulo
+            )
+
+            desenharTextoQuebradoEmPosicao(
+                texto = foto.observacao.ifBlank { "Sem observação informada" },
+                paint = paintTextoPequeno,
+                x = x + 8f,
+                yTextoInicial = yObservacaoRotulo + 11f,
+                larguraMaxima = largura - 16f,
+                alturaLinha = 10.2f,
                 maxLinhas = 3
+            )
+
+            desenharTextoQuebradoEmPosicao(
+                texto = foto.detalhes,
+                paint = paintTextoPequeno,
+                x = x + 8f,
+                yTextoInicial = yTopo + alturaCard - 25f,
+                larguraMaxima = largura - 16f,
+                alturaLinha = 10.2f,
+                maxLinhas = 2
             )
         }
 

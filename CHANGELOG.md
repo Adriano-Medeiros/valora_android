@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.8.3 - Legendas e observações das fotos no PDF
+
+### Melhorado
+
+- Adicionada exibição da legenda das fotos gerais no relatório PDF.
+- Adicionada exibição da observação das fotos gerais no relatório PDF.
+- Adicionada exibição da legenda das fotos das benfeitorias no relatório PDF.
+- Adicionada exibição da observação das fotos das benfeitorias no relatório PDF.
+- Melhorado o card visual das fotos no relatório PDF.
+- Melhorada a organização das informações das fotos no PDF.
+- Melhorado o layout da grade de fotos para comportar legenda, observação, data, hora e coordenadas.
+- Mantida a geração do PDF individual e em lote.
+- Mantida a inclusão do PDF dentro do pacote ZIP.
+
+### Técnico
+
+- Atualizado `PdfExportService`.
+- Adicionado suporte visual aos campos `legenda` e `observacao` das entidades `FotoColetaEntity` e `FotoBenfeitoriaEntity`.
+- Mantida a arquitetura centralizada de exportação.
+- Atualizado `versionCode` para 13.
+- Atualizado `versionName` para 0.8.3.
+
+---
+
 ## v0.8.2 - Edição de benfeitorias
 
 ### Adicionado

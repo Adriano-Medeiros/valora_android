@@ -9,11 +9,11 @@ O RuralColeta permite cadastrar formulários de pesquisa, registrar imóveis ava
 
 ## Status atual
 
-Versão atual: `v0.8.2`
+Versão atual: `v0.8.3`
 
 ```kotlin
-versionCode = 12
-versionName = "0.8.2"
+versionCode = 13
+versionName = "0.8.3"
 ```
 
 Esta versão inclui:
@@ -47,6 +47,25 @@ Esta versão inclui:
 - Edição de benfeitorias já cadastradas.
 - Abertura da tela de edição ao clicar no card da benfeitoria.
 - Acesso às fotos da benfeitoria pela tela de edição.
+- Exibição de legendas das fotos gerais no relatório PDF.
+- Exibição de observações das fotos gerais no relatório PDF.
+- Exibição de legendas das fotos das benfeitorias no relatório PDF.
+- Exibição de observações das fotos das benfeitorias no relatório PDF.
+- Melhorias no card visual das fotos no PDF.
+- Melhorias nas fotos gerais.
+- Melhorias nas fotos das benfeitorias.
+- Campo de legenda para fotos.
+- Campo de observação para fotos.
+- Edição posterior da legenda da foto.
+- Edição posterior da observação da foto.
+- Edição de benfeitorias já cadastradas.
+- Backup completo dos dados do aplicativo.
+- Restauração de backup.
+- Relatório PDF com logomarca do RuralColeta no cabeçalho.
+- Exportação individual pela tela de detalhe da coleta.
+- Exportação em lote pela tela de exportação.
+- Exportação em Excel.
+- Exportação em pacote completo ZIP.
 
 ---
 
