@@ -20,6 +20,6 @@ class FotosBenfeitoriaViewModelFactory(
             ) as T
         }
 
-        throw IllegalArgumentException("ViewModel desconhecida")
+        throw IllegalArgumentException("ViewModel desconhecida: ${modelClass.name}")
     }
 }

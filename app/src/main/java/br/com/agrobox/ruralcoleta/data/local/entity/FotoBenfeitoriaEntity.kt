@@ -23,6 +23,7 @@ data class FotoBenfeitoriaEntity(
     val benfeitoriaId: Long,
     val caminhoArquivo: String,
     val legenda: String? = null,
+    val observacao: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
     val dataHora: Long = System.currentTimeMillis()

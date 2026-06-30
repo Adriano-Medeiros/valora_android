@@ -20,6 +20,12 @@ class FotoBenfeitoriaRepository(
         return dao.inserir(foto)
     }
 
+    suspend fun atualizar(
+        foto: FotoBenfeitoriaEntity
+    ) {
+        dao.atualizar(foto)
+    }
+
     suspend fun excluir(
         foto: FotoBenfeitoriaEntity
     ) {

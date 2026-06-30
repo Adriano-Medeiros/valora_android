@@ -9,11 +9,11 @@ O RuralColeta permite cadastrar formulários de pesquisa, registrar imóveis ava
 
 ## Status atual
 
-Versão atual: `v0.8.1`
+Versão atual: `v0.8.2`
 
 ```kotlin
-versionCode = 11
-versionName = "0.8.1"
+versionCode = 12
+versionName = "0.8.2"
 ```
 
 Esta versão inclui:
@@ -44,6 +44,9 @@ Esta versão inclui:
 - Campo de data com DatePicker.
 - Tutorial guiado de primeiro acesso.
 - Exibição da versão do aplicativo na Splash Screen.
+- Edição de benfeitorias já cadastradas.
+- Abertura da tela de edição ao clicar no card da benfeitoria.
+- Acesso às fotos da benfeitoria pela tela de edição.
 
 ---
 

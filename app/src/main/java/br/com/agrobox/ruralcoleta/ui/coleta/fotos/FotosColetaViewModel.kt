@@ -39,22 +39,47 @@ class FotosColetaViewModel(
         )
     }
 
+    fun alterarObservacao(
+        observacao: String
+    ) {
+        _uiState.value = _uiState.value.copy(
+            observacao = observacao
+        )
+    }
+
     fun salvarFoto(
         caminho: String
     ) {
         viewModelScope.launch {
-            val legendaAtual = _uiState.value.legenda
+            val state = _uiState.value
 
             repository.salvar(
                 FotoColetaEntity(
                     coletaId = coletaId,
                     caminhoArquivo = caminho,
-                    legenda = legendaAtual.ifBlank { null }
+                    legenda = state.legenda.ifBlank { null },
+                    observacao = state.observacao.ifBlank { null }
                 )
             )
 
             _uiState.value = _uiState.value.copy(
-                legenda = ""
+                legenda = "",
+                observacao = ""
+            )
+        }
+    }
+
+    fun atualizarFoto(
+        foto: FotoColetaEntity,
+        legenda: String,
+        observacao: String
+    ) {
+        viewModelScope.launch {
+            repository.atualizar(
+                foto.copy(
+                    legenda = legenda.ifBlank { null },
+                    observacao = observacao.ifBlank { null }
+                )
             )
         }
     }

@@ -4,11 +4,13 @@ import android.Manifest
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import br.com.agrobox.ruralcoleta.data.local.entity.FotoBenfeitoriaEntity
 import br.com.agrobox.ruralcoleta.ui.components.ColetaTopBar
 import br.com.agrobox.ruralcoleta.ui.components.ConfirmDeleteDialog
+import br.com.agrobox.ruralcoleta.ui.components.FotoDescricaoDialog
 import br.com.agrobox.ruralcoleta.util.CameraHelper
 import br.com.agrobox.ruralcoleta.util.FileHelper
 import coil.compose.rememberAsyncImagePainter
@@ -72,15 +76,18 @@ fun FotosBenfeitoriaScreen(
         mutableStateOf<FotoBenfeitoriaEntity?>(null)
     }
 
+    val fotoParaEditar = remember {
+        mutableStateOf<FotoBenfeitoriaEntity?>(null)
+    }
+
     val verde = Color(0xFF00823B)
     val fundo = Color(0xFFF7F8F7)
 
-    lateinit var cameraLauncher: androidx.activity.result.ActivityResultLauncher<Uri>
+    lateinit var cameraLauncher: ActivityResultLauncher<Uri>
 
     cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { sucesso ->
-
         if (sucesso) {
             arquivoAtual.value?.let { arquivo ->
                 viewModel.salvarFoto(
@@ -101,7 +108,6 @@ fun FotosBenfeitoriaScreen(
     val permissaoCameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { permitido ->
-
         if (permitido) {
             val arquivo = FileHelper.criarArquivoImagemBenfeitoria(
                 context = context,
@@ -145,6 +151,26 @@ fun FotosBenfeitoriaScreen(
         )
     }
 
+    fotoParaEditar.value?.let { foto ->
+        FotoDescricaoDialog(
+            titulo = "Editar dados da foto",
+            legendaInicial = foto.legenda.orEmpty(),
+            observacaoInicial = foto.observacao.orEmpty(),
+            textoBotaoConfirmar = "Salvar",
+            onConfirmar = { legenda, observacao ->
+                viewModel.atualizarFoto(
+                    foto = foto,
+                    legenda = legenda,
+                    observacao = observacao
+                )
+                fotoParaEditar.value = null
+            },
+            onCancelar = {
+                fotoParaEditar.value = null
+            }
+        )
+    }
+
     Scaffold(
         containerColor = fundo,
         topBar = {
@@ -155,7 +181,6 @@ fun FotosBenfeitoriaScreen(
             )
         }
     ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -171,7 +196,7 @@ fun FotosBenfeitoriaScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Adicione fotos específicas desta benfeitoria.",
+                text = "Informe legenda e observação antes de tirar a foto. Depois você também pode editar essas informações.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -189,6 +214,22 @@ fun FotosBenfeitoriaScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = uiState.observacao,
+                onValueChange = viewModel::alterarObservacao,
+                label = {
+                    Text("Observação da foto")
+                },
+                placeholder = {
+                    Text("Ex.: Estrutura em bom estado de conservação")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2,
+                maxLines = 3
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -256,6 +297,9 @@ fun FotosBenfeitoriaScreen(
                     items(uiState.fotos) { foto ->
                         FotoBenfeitoriaGridItem(
                             foto = foto,
+                            onEditClick = {
+                                fotoParaEditar.value = foto
+                            },
                             onDeleteClick = {
                                 fotoParaExcluir.value = foto
                             }
@@ -270,6 +314,7 @@ fun FotosBenfeitoriaScreen(
 @Composable
 private fun FotoBenfeitoriaGridItem(
     foto: FotoBenfeitoriaEntity,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Card(
@@ -286,28 +331,57 @@ private fun FotoBenfeitoriaGridItem(
                 contentDescription = foto.legenda,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(150.dp)
                     .clip(RoundedCornerShape(14.dp)),
                 contentScale = ContentScale.Crop
             )
 
-            IconButton(
-                onClick = onDeleteClick,
-                modifier = Modifier.align(Alignment.TopEnd)
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(2.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Excluir foto",
-                    tint = Color.White
-                )
+                IconButton(
+                    onClick = onEditClick
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar foto",
+                        tint = Color.White
+                    )
+                }
+
+                IconButton(
+                    onClick = onDeleteClick
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Excluir foto",
+                        tint = Color.White
+                    )
+                }
             }
         }
 
-        Text(
-            text = foto.legenda ?: "Sem legenda",
-            modifier = Modifier.padding(8.dp),
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium
-        )
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(
+                text = foto.legenda ?: "Sem legenda",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (!foto.observacao.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = foto.observacao,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray,
+                    maxLines = 3
+                )
+            }
+        }
     }
 }

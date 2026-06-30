@@ -48,6 +48,15 @@ sealed class Screen(
         }
     }
 
+    data object EditarBenfeitoria : Screen("editar_benfeitoria/{coletaId}/{benfeitoriaId}") {
+        fun createRoute(
+            coletaId: Long,
+            benfeitoriaId: Long
+        ): String {
+            return "editar_benfeitoria/$coletaId/$benfeitoriaId"
+        }
+    }
+
     data object BenfeitoriasColeta : Screen("benfeitorias_coleta/{coletaId}") {
         fun createRoute(coletaId: Long): String {
             return "benfeitorias_coleta/$coletaId"

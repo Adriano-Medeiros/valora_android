@@ -2,8 +2,26 @@ package br.com.agrobox.ruralcoleta.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import br.com.agrobox.ruralcoleta.data.local.dao.*
-import br.com.agrobox.ruralcoleta.data.local.entity.*
+import br.com.agrobox.ruralcoleta.data.local.dao.BenfeitoriaDao
+import br.com.agrobox.ruralcoleta.data.local.dao.ColetaDao
+import br.com.agrobox.ruralcoleta.data.local.dao.FotoBenfeitoriaDao
+import br.com.agrobox.ruralcoleta.data.local.dao.FotoColetaDao
+import br.com.agrobox.ruralcoleta.data.local.dao.GrupoVariavelDao
+import br.com.agrobox.ruralcoleta.data.local.dao.ModeloColetaDao
+import br.com.agrobox.ruralcoleta.data.local.dao.ModeloColetaVariavelDao
+import br.com.agrobox.ruralcoleta.data.local.dao.OpcaoVariavelDao
+import br.com.agrobox.ruralcoleta.data.local.dao.RespostaColetaDao
+import br.com.agrobox.ruralcoleta.data.local.dao.VariavelDao
+import br.com.agrobox.ruralcoleta.data.local.entity.BenfeitoriaEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.ColetaEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.FotoBenfeitoriaEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.FotoColetaEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.GrupoVariavelEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.ModeloColetaEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.ModeloColetaVariavelEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.OpcaoVariavelEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.RespostaColetaEntity
+import br.com.agrobox.ruralcoleta.data.local.entity.VariavelEntity
 
 @Database(
     entities = [
@@ -18,7 +36,7 @@ import br.com.agrobox.ruralcoleta.data.local.entity.*
         FotoColetaEntity::class,
         FotoBenfeitoriaEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

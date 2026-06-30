@@ -1,4 +1,41 @@
 # Changelog
+
+## v0.8.2 - Edição de benfeitorias
+
+### Adicionado
+
+- Adicionada edição de benfeitorias já cadastradas.
+- Adicionada abertura da tela de edição ao clicar no card da benfeitoria.
+- Adicionado carregamento dos dados existentes da benfeitoria na tela de edição.
+- Adicionada opção para abrir fotos da benfeitoria pela tela de edição.
+- Adicionada atualização dos dados da benfeitoria no banco local.
+
+### Melhorado
+
+- Melhorado o fluxo de cadastro e manutenção de benfeitorias.
+- Melhorada a experiência do usuário ao permitir correções posteriores.
+- Melhorada a tela de listagem de benfeitorias com acesso direto à edição.
+- Melhorada a reutilização da tela de nova benfeitoria para criação e edição.
+
+### Corrigido
+
+- Corrigido erro de smart cast em `NovaBenfeitoriaScreen` ao acessar `benfeitoriaId`.
+- Corrigido fluxo que não permitia editar dados de benfeitorias após o cadastro.
+
+### Técnico
+
+- Atualizado `BenfeitoriaDao`.
+- Atualizado `BenfeitoriaRepository`.
+- Atualizado `BenfeitoriasViewModel`.
+- Atualizado `BenfeitoriasUiState`.
+- Atualizado `BenfeitoriasScreen`.
+- Atualizado `NovaBenfeitoriaScreen`.
+- Atualizada navegação para suportar edição de benfeitoria.
+- Atualizado `versionCode` para 12.
+- Atualizado `versionName` para 0.8.2.
+
+---
+
 ## v0.8.1 - Melhorias em fotos, legendas e observações
 
 ### Adicionado

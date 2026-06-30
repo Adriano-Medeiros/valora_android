@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 
 class BenfeitoriasViewModel(
     private val repository: BenfeitoriaRepository,
-    private val coletaId: Long
+    private val coletaId: Long,
+    private val benfeitoriaId: Long? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BenfeitoriasUiState())
@@ -19,6 +20,10 @@ class BenfeitoriasViewModel(
 
     init {
         carregarBenfeitorias()
+
+        if (benfeitoriaId != null) {
+            carregarBenfeitoriaParaEdicao(benfeitoriaId)
+        }
     }
 
     private fun carregarBenfeitorias() {
@@ -31,12 +36,53 @@ class BenfeitoriasViewModel(
         }
     }
 
+    private fun carregarBenfeitoriaParaEdicao(
+        benfeitoriaId: Long
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                carregando = true,
+                mensagemErro = null
+            )
+
+            val benfeitoria = repository.buscarPorId(benfeitoriaId)
+
+            if (benfeitoria == null) {
+                _uiState.value = _uiState.value.copy(
+                    carregando = false,
+                    mensagemErro = "Benfeitoria não encontrada."
+                )
+                return@launch
+            }
+
+            _uiState.value = _uiState.value.copy(
+                benfeitoriaId = benfeitoria.id,
+                categoriaSelecionada = categoriaPorNome(benfeitoria.categoria),
+                nome = benfeitoria.nome,
+                descricao = benfeitoria.descricao.orEmpty(),
+                quantidade = benfeitoria.quantidade?.toString().orEmpty(),
+                unidade = benfeitoria.unidade.orEmpty(),
+                estadoConservacao = benfeitoria.estadoConservacao.orEmpty(),
+                idadeAproximada = benfeitoria.idadeAproximada?.toString().orEmpty(),
+                observacao = benfeitoria.observacao.orEmpty(),
+                carregando = false,
+                mensagemErro = null
+            )
+        }
+    }
+
     fun alterarCategoria(categoria: CategoriaBenfeitoria) {
-        _uiState.value = _uiState.value.copy(categoriaSelecionada = categoria)
+        _uiState.value = _uiState.value.copy(
+            categoriaSelecionada = categoria,
+            mensagemErro = null
+        )
     }
 
     fun alterarNome(nome: String) {
-        _uiState.value = _uiState.value.copy(nome = nome)
+        _uiState.value = _uiState.value.copy(
+            nome = nome,
+            mensagemErro = null
+        )
     }
 
     fun alterarDescricao(descricao: String) {
@@ -69,13 +115,20 @@ class BenfeitoriasViewModel(
         val state = _uiState.value
 
         if (state.nome.isBlank()) {
+            _uiState.value = state.copy(
+                mensagemErro = "Informe o nome da benfeitoria."
+            )
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = state.copy(salvando = true)
+            _uiState.value = state.copy(
+                salvando = true,
+                mensagemErro = null
+            )
 
             val benfeitoria = BenfeitoriaEntity(
+                id = state.benfeitoriaId ?: 0L,
                 coletaId = coletaId,
                 categoria = state.categoriaSelecionada.name,
                 nome = state.nome.trim(),
@@ -87,9 +140,16 @@ class BenfeitoriasViewModel(
                 observacao = state.observacao.trim().ifBlank { null }
             )
 
-            repository.salvar(benfeitoria)
+            if (state.editando) {
+                repository.atualizar(benfeitoria)
+            } else {
+                repository.salvar(benfeitoria)
+            }
 
-            _uiState.value = BenfeitoriasUiState()
+            _uiState.value = state.copy(
+                salvando = false,
+                mensagemErro = null
+            )
 
             onSuccess()
         }
@@ -101,5 +161,13 @@ class BenfeitoriasViewModel(
         viewModelScope.launch {
             repository.excluir(benfeitoria)
         }
+    }
+
+    private fun categoriaPorNome(
+        nome: String
+    ): CategoriaBenfeitoria {
+        return CategoriaBenfeitoria.values()
+            .firstOrNull { categoria -> categoria.name == nome }
+            ?: CategoriaBenfeitoria.REPRODUTIVA
     }
 }

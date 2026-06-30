@@ -362,6 +362,14 @@ fun AppNavigation(
                             Screen.NovaBenfeitoria.createRoute(coletaId)
                         )
                     },
+                    onEditarClick = { benfeitoriaId ->
+                        navController.navigate(
+                            Screen.EditarBenfeitoria.createRoute(
+                                coletaId = coletaId,
+                                benfeitoriaId = benfeitoriaId
+                            )
+                        )
+                    },
                     onFotosClick = { benfeitoriaId ->
                         navController.navigate(
                             Screen.FotosBenfeitoria.createRoute(benfeitoriaId)
@@ -374,6 +382,45 @@ fun AppNavigation(
                     }
                 )
             }
+            composable(
+                route = Screen.EditarBenfeitoria.route,
+                arguments = listOf(
+                    navArgument("coletaId") {
+                        type = NavType.LongType
+                    },
+                    navArgument("benfeitoriaId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val coletaId = backStackEntry.arguments?.getLong("coletaId") ?: 0L
+                val benfeitoriaId = backStackEntry.arguments?.getLong("benfeitoriaId") ?: 0L
+
+                val benfeitoriasViewModel: BenfeitoriasViewModel = viewModel(
+                    factory = BenfeitoriasViewModelFactory(
+                        repository = benfeitoriaRepository,
+                        coletaId = coletaId,
+                        benfeitoriaId = benfeitoriaId
+                    )
+                )
+
+                NovaBenfeitoriaScreen(
+                    viewModel = benfeitoriasViewModel,
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    },
+                    onFotosClick = { id ->
+                        navController.navigate(
+                            Screen.FotosBenfeitoria.createRoute(id)
+                        )
+                    }
+                )
+            }
+
             composable(
                 route = Screen.FotosBenfeitoria.route,
                 arguments = listOf(
